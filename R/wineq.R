@@ -24,6 +24,6 @@ wineq <- function(Y,D,rule){
   }
   WT <- (2/(n*(n-1)))*w
   mu <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
-  G <- DescTools::Gini(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
+  G <- 1 - WT/mu
   return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
 }

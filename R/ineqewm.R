@@ -45,8 +45,6 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     } else if (WF == "util"){
       WT0all <- wutil(Y,D,rl0)
       WT0 <- WT0all$Welfare
-      mu0 <- WT0all$Welfare
-      G0 <- WT0all$Gini
     }
     WT <- rep(0,length(aa$group_id))
     muT <- rep(0,length(aa$group_id))
@@ -70,9 +68,8 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       } else if (WF == "util"){
         WTall <- wutil(Y,D,rl)
         WT[rr] <- WTall$Welfare
-        muT[rr] <- WTall$Welfare
-        GT[rr] <- WTall$Gini
       }
+      if (WT[rr] >= max(WT)){rlstar <- rl}
     }
     WTmax <- max(WT)
     WTg <- (WTmax - WT0)/WT0
@@ -81,9 +78,13 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     if (WF != "IOp"){
       res <- c("W0" = WT0,"Mean0" = mu0, "Gini0" = G0, "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "GiniT" = GTmax)
-    } else{res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
+    } else if (WF == "util" | WF == "IGM"){
+      res <- c("W0" = WT0, "W*" = WTmax, "Wg*" = WTg)
+    } else{
+      res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
                     "W*" = WTmax, "Wg*" = WTg,
-                    "MeanT" = muTmax, "IOpT" = GTmax)}
+                    "MeanT" = muTmax, "IOpT" = GTmax)
+    }
     rlmax <- sort(unique(aa$group_id))[which.max(WT)]
     aux <- dplyr::select(aa[aa$group_id == rlmax,],dplyr::all_of(targetnames))
     group_id <- NULL
@@ -136,8 +137,6 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     } else if (WF == "util"){
       WT0all <- wutil(Y,D,rl0)
       WT0 <- WT0all$Welfare
-      mu0 <- WT0all$Welfare
-      G0 <- WT0all$Gini
     }
     WT <- rep(0,length(nrow(aasum)))
     muT <- rep(0,length(nrow(aasum)))
@@ -162,9 +161,8 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       } else if (WF == "util"){
         WTall <- wutil(Y,D,rl)
         WT[rr] <- WTall$Welfare
-        muT[rr] <- WTall$Welfare
-        GT[rr] <- WTall$Gini
       }
+      if (WT[rr] >= max(WT)){rlstar <- rl}
     }
     WTmax <- max(WT)
     WTg <- (WTmax - WT0)/WT0
@@ -173,9 +171,13 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     if (WF != "IOp"){
       res <- c("W0" = WT0,"Mean0" = mu0, "Gini0" = G0, "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "GiniT" = GTmax)
-    } else{res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
-                    "W*" = WTmax, "Wg*" = WTg,
-                    "MeanT" = muTmax, "IOpT" = GTmax)}
+    } else if (WF == "util" | WF == "IGM"){
+      res <- c("W0" = WT0, "W*" = WTmax, "Wg*" = WTg)
+    } else{
+      res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
+               "W*" = WTmax, "Wg*" = WTg,
+               "MeanT" = muTmax, "IOpT" = GTmax)
+    }
     rlmax <- which.max(WT)
     aux <- dplyr::select(aasum[rlmax,],dplyr::all_of(targetnames))
 
@@ -195,5 +197,5 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
                ymax = dfpl[rlmax,2],
                alpha=.3, fill='red')
   }
-  return(list(res = res, plot = p))
+  return(list(res = res, rulemax = rlstar, plot = p))
 }

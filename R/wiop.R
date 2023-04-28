@@ -28,6 +28,6 @@ wiop <- function(Y,D,X,rule,
   }
   WT <- (2/(n*(n-1)))*w
   mu <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
-  iop <- DescTools::Gini(fvst)
+  iop <- 1 - WT/mu
   return(list("Welfare" = WT, "Mean" = mu, "IOp" = iop))
 }

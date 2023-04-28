@@ -11,5 +11,5 @@ wutil <- function(Y,D,rule){
   n <- length(Y)
   WT <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
   G <- DescTools::Gini(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
-  return(list("Welfare" = WT, "Gini" = G))
+  return(list("Welfare" = WT))
 }
