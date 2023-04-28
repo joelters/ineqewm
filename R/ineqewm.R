@@ -75,12 +75,12 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     WTg <- (WTmax - WT0)/WT0
     muTmax <- muT[which.max(WT)]
     GTmax <- GT[which.max(WT)]
-    if (WF != "IOp"){
+    if (WF == "ineq"){
       res <- c("W0" = WT0,"Mean0" = mu0, "Gini0" = G0, "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "GiniT" = GTmax)
     } else if (WF == "util" | WF == "IGM"){
       res <- c("W0" = WT0, "W*" = WTmax, "Wg*" = WTg)
-    } else{
+    } else if (WF == "IOp"){
       res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
                     "W*" = WTmax, "Wg*" = WTg,
                     "MeanT" = muTmax, "IOpT" = GTmax)
@@ -168,12 +168,12 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     WTg <- (WTmax - WT0)/WT0
     muTmax <- muT[which.max(WT)]
     GTmax <- GT[which.max(WT)]
-    if (WF != "IOp"){
+    if (WF == "ineq"){
       res <- c("W0" = WT0,"Mean0" = mu0, "Gini0" = G0, "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "GiniT" = GTmax)
     } else if (WF == "util" | WF == "IGM"){
       res <- c("W0" = WT0, "W*" = WTmax, "Wg*" = WTg)
-    } else{
+    } else if (WF == "IOp"){
       res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
                "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "IOpT" = GTmax)
