@@ -1,3 +1,18 @@
+#' Social Welfare Function maximization
+#'
+#' @param Y Outcome vector.
+#' @param D Treatment assignment.
+#' @param X Tibble with circumstances.
+#' @param targetX Variables to use for treatment allocation
+#' @param rule Family of treatment rules to search from
+#' @param WF Welfare function
+#' @param tigm Target for Kendall-tau
+#' @param X1 variable to compute Kendall-tau with
+#' @param quants how many quantiles to split continuous vars in targetX
+#' @param ML Choice of Machine Learner (for IOp)
+#'
+#' @return A list with the output and a figure.
+#' @export
 ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
          WF = c("ineq","IOp","IGM","util"),tigm, X1,
          quants,
@@ -6,29 +21,29 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     cns <- unlist(lapply(targetX,is.double))
     cns_names <- colnames(targetX[,cns])
     discr_names <- colnames(targetX[,!cns])
-    aux <- as_tibble(lapply(targetX[,cns], function(u){
-      as.numeric(cut_number(u, n = quants, labels = as.character(1:quants)))
+    aux <- dplyr::as_tibble(lapply(targetX[,cns], function(u){
+      as.numeric(ggplot2::cut_number(u, n = quants, labels = as.character(1:quants)))
     }))
     colnames(aux) <- paste("Q",cns_names,sep="")
     targetnames <- c(paste("Q",cns_names,sep=""),discr_names)
-    aa <- as_tibble(cbind(targetX,aux)) %>%
-      group_by(across(all_of(targetnames))) %>%
-      mutate(group_id = cur_group_id())
+    aa <- dplyr::as_tibble(cbind(targetX,aux)) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
+      dplyr::mutate(group_id = dplyr::cur_group_id())
     rl0 <- rep(0,length(aa$group_id))
     if (WF == "ineq"){
-      WT0all <- Wineqipw(Y,D,rl0)
+      WT0all <- wineq(Y,D,rl0)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
     } else if (WF == "IOp"){
-      WT0all <- WIOpPI(Y,D,X,rl0, ML = ML)
+      WT0all <- wiop(Y,D,X,rl0, ML = ML)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
     } else if (WF == "IGM"){
-      WT0 <- Wintergmipw(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
+      WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
     } else if (WF == "util"){
-      WT0all <- Wutil(Y,D,rl0)
+      WT0all <- wutil(Y,D,rl0)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Welfare
       G0 <- WT0all$Gini
@@ -41,19 +56,19 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       # print(rr/length(unique(aa$group_id)))
       rl <- aa$group_id <= sort(unique(aa$group_id))[rr]
       if (WF == "ineq"){
-        WTall <- Wineqipw(Y,D,rl)
+        WTall <- wineq(Y,D,rl)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
       } else if (WF == "IOp"){
-        WTall <- WIOpPI(Y,D,X,rl, ML = ML)
+        WTall <- wiop(Y,D,X,rl, ML = ML)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
       } else if (WF == "IGM"){
-        WT[rr] <- Wintergmipw(Y = Y,X1 = X1,D = D,X = X, t = tigm,rl)
+        WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
       } else if (WF == "util"){
-        WTall <- Wutil(Y,D,rl)
+        WTall <- wutil(Y,D,rl)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Welfare
         GT[rr] <- WTall$Gini
@@ -70,25 +85,26 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
                     "W*" = WTmax, "Wg*" = WTg,
                     "MeanT" = muTmax, "IOpT" = GTmax)}
     rlmax <- sort(unique(aa$group_id))[which.max(WT)]
-    aux <- dplyr::select(aa[aa$group_id == rlmax,],all_of(targetnames))
-
-    dfpl <- aa %>% dplyr::select(all_of(c(targetnames,"group_id"))) %>%
-      dplyr::group_by(across(all_of(targetnames))) %>%
-      dplyr::summarise(count = n(), group_id = mean(group_id))
+    aux <- dplyr::select(aa[aa$group_id == rlmax,],dplyr::all_of(targetnames))
+    group_id <- NULL
+    count <- NULL
+    dfpl <- aa %>% dplyr::select(dplyr::all_of(c(targetnames,"group_id"))) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
+      dplyr::summarise(count = dplyr::n(), group_id = mean(group_id))
     dfpl <- data.frame(dfpl)
 
-    p <- ggplot(dfpl, aes(x = dfpl[,1],
+    p <- ggplot2::ggplot(dfpl, ggplot2::aes(x = dfpl[,1],
                           y = dfpl[,2],
                           size = count),
                 environment = environment()) +
-      geom_point() +
-      xlab(colnames(dfpl)[1]) +
-      ylab(colnames(dfpl)[2]) +
-      ggtitle(WF) +
-      annotate('rect', xmin = -0.5,
+      ggplot2::geom_point() +
+      ggplot2::xlab(colnames(dfpl)[1]) +
+      ggplot2::ylab(colnames(dfpl)[2]) +
+      ggplot2::ggtitle(WF) +
+      ggplot2::annotate('rect', xmin = -0.5,
                xmax= dfpl[dfpl$group_id == rlmax,1] - 1, ymin=-0.5, ymax = max(dfpl[,2]),
                alpha=.3, fill='red') +
-      annotate('rect', xmin=dfpl[dfpl$group_id == rlmax,1] - 1,
+      ggplot2::annotate('rect', xmin=dfpl[dfpl$group_id == rlmax,1] - 1,
                xmax=dfpl[dfpl$group_id == rlmax,1],
                ymin=-0.5, ymax=dfpl[dfpl$group_id == rlmax,2], alpha=.3, fill='red')
   }
@@ -96,29 +112,29 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     cns <- unlist(lapply(targetX,is.double))
     cns_names <- colnames(targetX[,cns])
     discr_names <- colnames(targetX[,!cns])
-    aux <- as_tibble(lapply(targetX[,cns], function(u){
-      as.numeric(cut_number(u, n = quants, labels = as.character(1:quants)))
+    aux <- dplyr::as_tibble(lapply(targetX[,cns], function(u){
+      as.numeric(ggplot2::cut_number(u, n = quants, labels = as.character(1:quants)))
     }))
     colnames(aux) <- paste("Q",cns_names,sep="")
     targetnames <- c(paste("Q",cns_names,sep=""),discr_names)
-    aa <- as_tibble(cbind(targetX,aux)) %>%
-      group_by(across(all_of(targetnames)))
-    aasum <- dplyr::summarise(aa,count = n())
+    aa <- dplyr::as_tibble(cbind(targetX,aux)) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(targetnames)))
+    aasum <- dplyr::summarise(aa,count = dplyr::n())
     rl0 <- rep(0,length(Y))
     if (WF == "ineq"){
-      WT0all <- Wineqipw(Y,D,rl0)
+      WT0all <- wineq(Y,D,rl0)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
     } else if (WF == "IOp"){
-      WT0all <- WIOpPI(Y,D,X,rl0, ML = ML)
+      WT0all <- wiop(Y,D,X,rl0, ML = ML)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
     } else if (WF == "IGM"){
-      WT0 <- Wintergmipw(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
+      WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
     } else if (WF == "util"){
-      WT0all <- Wutil(Y,D,rl0)
+      WT0all <- wutil(Y,D,rl0)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Welfare
       G0 <- WT0all$Gini
@@ -132,19 +148,19 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       rl <- (data.frame(aa[,3])[,] <= as.numeric(aasum[rr,1]) &
                data.frame(aa[,2])[,] <= as.numeric(aasum[rr,2]))
       if (WF == "ineq"){
-        WTall <- Wineqipw(Y,D,rl)
+        WTall <- wineq(Y,D,rl)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
       } else if (WF == "IOp"){
-        WTall <- WIOpPI(Y,D,X,rl, ML = ML)
+        WTall <- wiop(Y,D,X,rl, ML = ML)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
       } else if (WF == "IGM"){
-        WT[rr] <- Wintergmipw(Y = Y,X1 = X1,D = D,X = X, t = tigm,rl)
+        WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
       } else if (WF == "util"){
-        WTall <- Wutil(Y,D,rl)
+        WTall <- wutil(Y,D,rl)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Welfare
         GT[rr] <- WTall$Gini
@@ -161,19 +177,19 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
                     "W*" = WTmax, "Wg*" = WTg,
                     "MeanT" = muTmax, "IOpT" = GTmax)}
     rlmax <- which.max(WT)
-    aux <- dplyr::select(aasum[rlmax,],all_of(targetnames))
+    aux <- dplyr::select(aasum[rlmax,],dplyr::all_of(targetnames))
 
     dfpl <- data.frame(aasum)
 
-    p <- ggplot(dfpl, aes(x = dfpl[,1],
+    p <- ggplot2::ggplot(dfpl, ggplot2::aes(x = dfpl[,1],
                           y = dfpl[,2],
                           size = count),
                 environment = environment()) +
-      geom_point() +
-      xlab(colnames(dfpl)[1]) +
-      ylab(colnames(dfpl)[2]) +
-      ggtitle(WF) +
-      annotate('rect', xmin = 0.5,
+      ggplot2::geom_point() +
+      ggplot2::xlab(colnames(dfpl)[1]) +
+      ggplot2::ylab(colnames(dfpl)[2]) +
+      ggplot2::ggtitle(WF) +
+      ggplot2::annotate('rect', xmin = 0.5,
                xmax= dfpl[rlmax,1],
                ymin=-0.5,
                ymax = dfpl[rlmax,2],

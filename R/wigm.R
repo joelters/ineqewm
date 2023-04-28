@@ -1,3 +1,13 @@
+#' Kendall tau Welfare Function maximization
+#'
+#' @param Y Outcome vector.
+#' @param X1 variable to compute Kendall-tau with
+#' @param D Treatment assignment.
+#' @param t target Kendall-tau
+#' @param rule Treatment rule.
+#'
+#' @return A list with the output and a figure.
+#' @export
 wigm <- function(Y,X1,D,t,rule){
   p <- mean(D)
   n <- length(Y)

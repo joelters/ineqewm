@@ -1,3 +1,11 @@
+#' Standard Gini Social Welfare Function maximization
+#'
+#' @param Y Outcome vector.
+#' @param D Treatment assignment.
+#' @param rule Treatment rule.
+#'
+#' @return A list with the output and a figure.
+#' @export
 wineq <- function(Y,D,rule){
   p <- mean(D)
   n <- length(Y)
@@ -16,6 +24,6 @@ wineq <- function(Y,D,rule){
   }
   WT <- (2/(n*(n-1)))*w
   mu <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
-  G <- Gini(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
+  G <- DescTools::Gini(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
   return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
 }
