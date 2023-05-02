@@ -4,7 +4,17 @@
 \alias{wineq}
 \title{Standard Gini Social Welfare Function maximization}
 \usage{
-wineq(Y, D, rule)
+wineq(
+  Y,
+  D,
+  X,
+  rule,
+  design = c("rct", "observational"),
+  est_method = c("PI", "LR"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  CF = FALSE
+)
 }
 \arguments{
 \item{Y}{Outcome vector.}
@@ -12,6 +22,17 @@ wineq(Y, D, rule)
 \item{D}{Treatment assignment.}
 
 \item{rule}{Treatment rule.}
+
+\item{design}{Whether data comes from an RCT or from observational data}
+
+\item{est_method}{Whether traditional plug in estimators are to be used
+or locally robust estimators}
+
+\item{MLps}{Choice of machine learner for propensity score}
+
+\item{MLalpha}{Choice of machine learner for additional nuisance parameter}
+
+\item{CF}{Whether to use Cross-fitting}
 }
 \value{
 A list with the output and a figure.

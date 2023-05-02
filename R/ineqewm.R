@@ -13,10 +13,19 @@
 #'
 #' @return A list with the output and a figure.
 #' @export
-ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
-         WF = c("ineq","IOp","IGM","util"),tigm, X1,
-         quants,
-         ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL")){
+ineqewm <-function(Y,
+                   D,
+                   X,
+                   targetX,
+                   rule = c("lexi","monot"),
+                   WF = c("ineq","IOp","IGM","util"),tigm, X1,
+                   quants,
+                   design = c("rct","observational"),
+                   est_method = c("PI","LR"),
+                   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                   MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                   CF = FALSE, K = 5,
+                   MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL")){
   if(rule == "lexi"){
     cns <- unlist(lapply(targetX,is.double))
     cns_names <- colnames(targetX[,cns])
@@ -31,19 +40,33 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       dplyr::mutate(group_id = dplyr::cur_group_id())
     rl0 <- rep(0,length(aa$group_id))
     if (WF == "ineq"){
-      WT0all <- wineq(Y,D,rl0)
+      WT0all <- wineq(Y = Y,D = D, X = X,rule = rl0,
+                      design = design,
+                      est_method = est_method,
+                      MLps = MLps,
+                      MLalpha = MLalpha,
+                      CF = CF)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
     } else if (WF == "IOp"){
-      WT0all <- wiop(Y,D,X,rl0, ML = ML)
+      WT0all <- wiop(Y,D,X,rl0, ML = MLiop)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
     } else if (WF == "IGM"){
       WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
     } else if (WF == "util"){
-      WT0all <- wutil(Y,D,rl0)
+      WT0all <- wutil(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl0,
+                      design = design,
+                      est_method = est_method,
+                      MLps = MLps,
+                      MLreg = MLalpha,
+                      CF = CF,
+                      K = K)
       WT0 <- WT0all$Welfare
     }
     WT <- rep(0,length(aa$group_id))
@@ -54,19 +77,33 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       # print(rr/length(unique(aa$group_id)))
       rl <- aa$group_id <= sort(unique(aa$group_id))[rr]
       if (WF == "ineq"){
-        WTall <- wineq(Y,D,rl)
+        WTall <- wineq(Y = Y,D = D, X = X, rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLalpha = MLalpha,
+                       CF = CF)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
       } else if (WF == "IOp"){
-        WTall <- wiop(Y,D,X,rl, ML = ML)
+        WTall <- wiop(Y,D,X,rl, ML = MLiop)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
       } else if (WF == "IGM"){
         WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
       } else if (WF == "util"){
-        WTall <- wutil(Y,D,rl)
+        WTall <- wutil(Y = Y,
+                       D = D,
+                       X = X,
+                       rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLreg = MLalpha,
+                       CF = CF,
+                       K = K)
         WT[rr] <- WTall$Welfare
       }
       if (WT[rr] >= max(WT)){rlstar <- rl}
@@ -123,19 +160,33 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
     aasum <- dplyr::summarise(aa,count = dplyr::n())
     rl0 <- rep(0,length(Y))
     if (WF == "ineq"){
-      WT0all <- wineq(Y,D,rl0)
+      WT0all <- wineq(Y = Y,D=D,X=X, rule = rl0,
+                      design = design,
+                      est_method = est_method,
+                      MLps = MLps,
+                      MLalpha = MLalpha,
+                      CF = CF)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
     } else if (WF == "IOp"){
-      WT0all <- wiop(Y,D,X,rl0, ML = ML)
+      WT0all <- wiop(Y,D,X,rl0, ML = MLiop)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
     } else if (WF == "IGM"){
       WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
     } else if (WF == "util"){
-      WT0all <- wutil(Y,D,rl0)
+      WT0all <- wutil(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl0,
+                      design = design,
+                      est_method = est_method,
+                      MLps = MLps,
+                      MLreg = MLalpha,
+                      CF = CF,
+                      K = K)
       WT0 <- WT0all$Welfare
     }
     WT <- rep(0,length(nrow(aasum)))
@@ -147,19 +198,33 @@ ineqewm <-function(Y,D,X,targetX,rule = c("lexi","monot"),
       rl <- (data.frame(aa[,3])[,] <= as.numeric(aasum[rr,1]) &
                data.frame(aa[,2])[,] <= as.numeric(aasum[rr,2]))
       if (WF == "ineq"){
-        WTall <- wineq(Y,D,rl)
+        WTall <- wineq(Y = Y, D = D, X = X, rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLalpha = MLalpha,
+                       CF = CF)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
       } else if (WF == "IOp"){
-        WTall <- wiop(Y,D,X,rl, ML = ML)
+        WTall <- wiop(Y,D,X,rl, ML = MLiop)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
       } else if (WF == "IGM"){
         WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
       } else if (WF == "util"){
-        WTall <- wutil(Y,D,rl)
+        WTall <- wutil(Y = Y,
+                       D = D,
+                       X = X,
+                       rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLreg = MLalpha,
+                       CF = CF,
+                       K = K)
         WT[rr] <- WTall$Welfare
       }
       if (WT[rr] >= max(WT)){rlstar <- rl}

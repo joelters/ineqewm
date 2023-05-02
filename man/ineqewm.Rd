@@ -14,7 +14,13 @@ ineqewm(
   tigm,
   X1,
   quants,
-  ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL")
+  design = c("rct", "observational"),
+  est_method = c("PI", "LR"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  CF = FALSE,
+  K = 5,
+  MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL")
 )
 }
 \arguments{

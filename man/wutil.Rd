@@ -4,14 +4,40 @@
 \alias{wutil}
 \title{Utilitarian Social Welfare Function maximization}
 \usage{
-wutil(Y, D, rule)
+wutil(
+  Y,
+  D,
+  X,
+  rule,
+  design = c("rct", "observational"),
+  est_method = c("PI", "LR"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  CF = FALSE,
+  K = 5
+)
 }
 \arguments{
 \item{Y}{Outcome vector.}
 
 \item{D}{Treatment assignment.}
 
+\item{X}{tibble with covariates}
+
 \item{rule}{Treatment rule.}
+
+\item{design}{Whether data comes from an RCT or from observational data}
+
+\item{est_method}{Whether traditional plug in estimators are to be used
+or locally robust estimators}
+
+\item{MLps}{Choice of machine learner for propensity score}
+
+\item{MLreg}{Choice of machine learner for outcome regression}
+
+\item{CF}{Whether to use Cross-fitting}
+
+\item{K}{number of folds in cross-fitting}
 }
 \value{
 A list with the output and a figure.
