@@ -91,14 +91,22 @@ ineqewm3 <-function(Y,
   cns <- unlist(lapply(targetX,is.double))
   cns_names <- colnames(targetX[,cns])
   discr_names <- colnames(targetX[,!cns])
-  aux <- dplyr::as_tibble(lapply(targetX[,cns], function(u){
-    as.numeric(ggplot2::cut_number(u, n = quants, labels = as.character(1:quants)))
-  }))
-  colnames(aux) <- paste("Q",cns_names,sep="")
-  targetnames <- c(paste("Q",cns_names,sep=""),discr_names)
-  aa <- dplyr::as_tibble(cbind(targetX,aux)) %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
-    dplyr::mutate(group_id = dplyr::cur_group_id()) #group id for each unique combination
+  if (ncol(targetX[,cns]) > 0){
+    aux <- dplyr::as_tibble(lapply(targetX[,cns], function(u){
+      as.numeric(ggplot2::cut_number(u, n = quants, labels = as.character(1:quants)))
+    }))
+    colnames(aux) <- paste("Q",cns_names,sep="")
+    targetnames <- c(paste("Q",cns_names,sep=""),discr_names)
+    aa <- dplyr::as_tibble(cbind(targetX,aux)) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
+      dplyr::mutate(group_id = dplyr::cur_group_id()) #group id for each unique combination
+  }
+  else if (ncol(targetX[,cns]) == 0){
+    targetnames <- colnames(targetX)
+    aa <- targetX %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
+      dplyr::mutate(group_id = dplyr::cur_group_id()) #group id for each unique combination
+  }
   aasum <- dplyr::summarise(aa,count = dplyr::n())
   if (parallel == FALSE){
     aux <- lapply(1:nrow(aasum),function(u){
