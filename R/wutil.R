@@ -19,18 +19,26 @@ wutil <- function(Y,D,X,rule,
                   est_method = c("PI","LR"),
                   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
                   MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                  CF = FALSE, K = 5){
+                  CF = TRUE,
+                  K = 5){
+D <- as.numeric(D)
+Y <- as.numeric(Y)
 n <- length(Y)
+############### RCT ####################
   if (design == "rct"){
     p <- mean(D)
     WT <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
   }
+################ Observational ###########
   else if (design == "observational"){
+    ############### Plug in ###############
     if (est_method == "PI"){
       ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
       ps <- ps$FVs
+      ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
       WT <- mean(Y*(1-D)/(1-ps) + ((Y*D)/ps - Y*(1-D)/(1-ps))*rule)
     }
+    ################ Locally robust ###########
     else if (est_method == "LR"){
       if (CF == TRUE){
         fv1 <- rep(0,n)
@@ -38,12 +46,12 @@ n <- length(Y)
         ps <- rep(0,n)
         ind <- split(seq(n), seq(n) %% K)
         for (i in 1:K){
-          mps <- ML::modest(X[ind[[i]],],D[ind[[i]]],ML = MLps)
-          ps[-ind[[i]]] <- ML::FVest(mps,X[ind[[i]],],D[ind[[i]]],
-                                     X[-ind[[i]],],D[-ind[[i]]],ML = MLps)
-          XD <- dplyr::filter(as_tibble(data.frame(Y = Y[ind[[i]]],
-                                                   D = D[ind[[i]]],
-                                                   X[ind[[i]],])))
+          mps <- ML::modest(X[-ind[[i]],],D[-ind[[i]]],ML = MLps)
+          ps[ind[[i]]] <- ML::FVest(mps,X[-ind[[i]],],D[-ind[[i]]],
+                                     X[ind[[i]],],D[ind[[i]]],ML = MLps)
+          XD <- dplyr::filter(as_tibble(data.frame(Y = Y[-ind[[i]]],
+                                                   D = D[-ind[[i]]],
+                                                   X[-ind[[i]],])))
           X1 <- XD %>% filter(D==1) %>% dplyr::select(-c("D","Y"))
           X0 <- XD %>% filter(D==0) %>% dplyr::select(-c("D","Y"))
           Y1 <- XD %>% filter(D==1) %>% dplyr::select(Y)
@@ -52,17 +60,20 @@ n <- length(Y)
           mfv1 <- ML::modest(X1,Y1$Y,ML = MLreg)
           mfv0 <- ML::modest(X0,Y0$Y,ML = MLreg)
 
-          fv1[-ind[[i]]] <- ML::FVest(mfv1, X1,Y1$Y,
-                                      X[-ind[[i]],],Y[-ind[[i]]],ML = MLreg)
-          fv0[-ind[[i]]] <- ML::FVest(mfv0, X0,Y0$Y,
-                                      X[-ind[[i]],],Y[-ind[[i]]],ML = MLreg)
+          fv1[ind[[i]]] <- ML::FVest(mfv1, X1,Y1$Y,
+                                      X[ind[[i]],],Y[ind[[i]]],ML = MLreg)
+          fv0[ind[[i]]] <- ML::FVest(mfv0, X0,Y0$Y,
+                                      X[ind[[i]],],Y[ind[[i]]],ML = MLreg)
         }
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
         WT <- Y*(1-D)/(1-ps) +
           (fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0))*rule
         WT <- mean(WT)
-        } else if (CF == FALSE){
+        }
+      else if (CF == FALSE){
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
           fv1 <- ML::MLest(X[D==1,],Y[D==1],ML = MLreg,FVs = TRUE)
           fv1 <- fv1$FVs
           fv0 <- ML::MLest(X[D==0,],Y[D==0],ML = MLreg,FVs = TRUE)
@@ -72,6 +83,7 @@ n <- length(Y)
           WT <- mean(WT)
         }
       }
-    }
+  }
+###################
 return(list("Welfare" = WT))
 }

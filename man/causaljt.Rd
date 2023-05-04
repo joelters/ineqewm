@@ -9,7 +9,7 @@ causaljt(
   D,
   X,
   design = c("rct", "observational"),
-  method = c("ipw", "aipw"),
+  method = c("meandiff", "ols", "directmethod", "ipw", "lr"),
   estimand = c("ate", "att"),
   MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),

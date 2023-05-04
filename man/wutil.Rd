@@ -13,7 +13,7 @@ wutil(
   est_method = c("PI", "LR"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
   MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-  CF = FALSE,
+  CF = TRUE,
   K = 5
 )
 }

@@ -2,24 +2,46 @@
 % Please edit documentation in R/wigm.R
 \name{wigm}
 \alias{wigm}
-\title{Kendall tau Welfare Function maximization}
+\title{Kendall-tau Welfare Function maximization}
 \usage{
-wigm(Y, X1, D, t, rule)
+wigm(
+  Y,
+  X1,
+  D,
+  X,
+  rule,
+  t,
+  design = c("rct", "observational"),
+  est_method = c("PI", "LR"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  CF = TRUE,
+  K = 5
+)
 }
 \arguments{
 \item{Y}{Outcome vector.}
 
-\item{X1}{variable to compute Kendall-tau with}
-
 \item{D}{Treatment assignment.}
 
-\item{t}{target Kendall-tau}
-
 \item{rule}{Treatment rule.}
+
+\item{design}{Whether data comes from an RCT or from observational data}
+
+\item{est_method}{Whether traditional plug in estimators are to be used
+or locally robust estimators}
+
+\item{MLps}{Choice of machine learner for propensity score}
+
+\item{MLalpha}{Choice of machine learner for additional nuisance parameter}
+
+\item{CF}{Whether to use Cross-fitting}
+
+\item{K}{Number of folds in Cross-fitting}
 }
 \value{
 A list with the output and a figure.
 }
 \description{
-Kendall tau Welfare Function maximization
+Kendall-tau Welfare Function maximization
 }

@@ -2,6 +2,8 @@
 
 export(causaljt)
 export(ineqewm)
+export(ineqewm2)
+export(ineqewm3)
 export(wigm)
 export(wineq)
 export(wiop)

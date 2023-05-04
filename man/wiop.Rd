@@ -4,7 +4,17 @@
 \alias{wiop}
 \title{Inequality of Opportunity Social Welfare Function maximization}
 \usage{
-wiop(Y, D, X, rule, ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"))
+wiop(
+  Y,
+  D,
+  X,
+  rule,
+  est_method = c("PI", "LR"),
+  MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  CF = TRUE,
+  K = 5
+)
 }
 \arguments{
 \item{Y}{Outcome vector.}

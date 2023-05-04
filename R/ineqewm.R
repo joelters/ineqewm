@@ -37,26 +37,51 @@ ineqewm <-function(Y,
     targetnames <- c(paste("Q",cns_names,sep=""),discr_names)
     aa <- dplyr::as_tibble(cbind(targetX,aux)) %>%
       dplyr::group_by(dplyr::across(dplyr::all_of(targetnames))) %>%
-      dplyr::mutate(group_id = dplyr::cur_group_id())
+      dplyr::mutate(group_id = dplyr::cur_group_id()) #group id for each unique combination
     rl0 <- rep(0,length(aa$group_id))
     if (WF == "ineq"){
-      WT0all <- wineq(Y = Y,D = D, X = X,rule = rl0,
+      WT0all <- wineq(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl0,
                       design = design,
                       est_method = est_method,
                       MLps = MLps,
                       MLalpha = MLalpha,
-                      CF = CF)
+                      CF = CF,
+                      K = K)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
-    } else if (WF == "IOp"){
-      WT0all <- wiop(Y,D,X,rl0, ML = MLiop)
+    }
+    else if (WF == "IOp"){
+      WT0all <- wiop(Y = Y,
+                     D = D,
+                     X = X,
+                     rule = rl0,
+                     est_method = est_method,
+                     MLiop = MLiop,
+                     MLps = MLps,
+                     CF = CF,
+                     K = K)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
-    } else if (WF == "IGM"){
-      WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
-    } else if (WF == "util"){
+    }
+    else if (WF == "IGM"){
+      WT0 <- wigm(Y = Y,
+                  X1 = X1,
+                  D = D,
+                  X = X,
+                  rule = rl0,
+                  design = design,
+                  est_method = est_method,
+                  MLps = MLps,
+                  MLalpha = MLaplha,
+                  CF = CF,
+                  K = K)
+    }
+    else if (WF == "util"){
       WT0all <- wutil(Y = Y,
                       D = D,
                       X = X,
@@ -77,23 +102,48 @@ ineqewm <-function(Y,
       # print(rr/length(unique(aa$group_id)))
       rl <- aa$group_id <= sort(unique(aa$group_id))[rr]
       if (WF == "ineq"){
-        WTall <- wineq(Y = Y,D = D, X = X, rule = rl,
+        WTall <- wineq(Y = Y,
+                       D = D,
+                       X = X,
+                       rule = rl,
                        design = design,
                        est_method = est_method,
                        MLps = MLps,
                        MLalpha = MLalpha,
-                       CF = CF)
+                       CF = CF,
+                       K = K)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
-      } else if (WF == "IOp"){
-        WTall <- wiop(Y,D,X,rl, ML = MLiop)
+      }
+      else if (WF == "IOp"){
+        WTall <- wiop(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl,
+                      est_method = est_method,
+                      MLiop = MLiop,
+                      MLps = MLps,
+                      CF = CF,
+                      K = K)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
-      } else if (WF == "IGM"){
-        WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
-      } else if (WF == "util"){
+      }
+      else if (WF == "IGM"){
+        WT[rr] <- wigm(Y = Y,
+                       X1 = X1,
+                       D = D,
+                       X = X,
+                       rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLalpha = MLaplha,
+                       CF = CF,
+                       K = K)
+      }
+      else if (WF == "util"){
         WTall <- wutil(Y = Y,
                        D = D,
                        X = X,
@@ -115,9 +165,11 @@ ineqewm <-function(Y,
     if (WF == "ineq"){
       res <- c("W0" = WT0,"Mean0" = mu0, "Gini0" = G0, "W*" = WTmax, "Wg*" = WTg,
                "MeanT" = muTmax, "GiniT" = GTmax)
-    } else if (WF == "util" | WF == "IGM"){
+    }
+    else if (WF == "util" | WF == "IGM"){
       res <- c("W0" = WT0, "W*" = WTmax, "Wg*" = WTg)
-    } else if (WF == "IOp"){
+    }
+    else if (WF == "IOp"){
       res <- c("W0" = WT0, "Mean0" = mu0, "IOp0" = IOp0,
                     "W*" = WTmax, "Wg*" = WTg,
                     "MeanT" = muTmax, "IOpT" = GTmax)
@@ -160,23 +212,48 @@ ineqewm <-function(Y,
     aasum <- dplyr::summarise(aa,count = dplyr::n())
     rl0 <- rep(0,length(Y))
     if (WF == "ineq"){
-      WT0all <- wineq(Y = Y,D=D,X=X, rule = rl0,
+      WT0all <- wineq(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl0,
                       design = design,
                       est_method = est_method,
                       MLps = MLps,
                       MLalpha = MLalpha,
-                      CF = CF)
+                      CF = CF,
+                      K = K)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       G0 <- WT0all$Gini
-    } else if (WF == "IOp"){
-      WT0all <- wiop(Y,D,X,rl0, ML = MLiop)
+    }
+    else if (WF == "IOp"){
+      WT0all <- wiop(Y = Y,
+                     D = D,
+                     X = X,
+                     rule = rl0,
+                     est_method = est_method,
+                     MLiop = MLiop,
+                     MLps = MLps,
+                     CF = CF,
+                     K = K)
       WT0 <- WT0all$Welfare
       mu0 <- WT0all$Mean
       IOp0 <- WT0all$IOp
-    } else if (WF == "IGM"){
-      WT0 <- wigm(Y = Y,X1 = X1,D = D,t = tigm,rule = rl0)
-    } else if (WF == "util"){
+    }
+    else if (WF == "IGM"){
+      WT0 <- wigm(Y = Y,
+                  X1 = X1,
+                  D = D,
+                  X = X,
+                  rule = rl0,
+                  design = design,
+                  est_method = est_method,
+                  MLps = MLps,
+                  MLalpha = MLaplha,
+                  CF = CF,
+                  K = K)
+    }
+    else if (WF == "util"){
       WT0all <- wutil(Y = Y,
                       D = D,
                       X = X,
@@ -193,28 +270,51 @@ ineqewm <-function(Y,
     muT <- rep(0,length(nrow(aasum)))
     GT <- rep(0,length(nrow(aasum)))
     for (rr in 1:nrow(aasum)){
-      # print(rr)
-      # print(rr/nrow(aasum))
       rl <- (data.frame(aa[,3])[,] <= as.numeric(aasum[rr,1]) &
                data.frame(aa[,2])[,] <= as.numeric(aasum[rr,2]))
       if (WF == "ineq"){
-        WTall <- wineq(Y = Y, D = D, X = X, rule = rl,
+        WTall <- wineq(Y = Y,
+                       D = D,
+                       X = X,
+                       rule = rl,
                        design = design,
                        est_method = est_method,
                        MLps = MLps,
                        MLalpha = MLalpha,
-                       CF = CF)
+                       CF = CF,
+                       K = K)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$Gini
-      } else if (WF == "IOp"){
-        WTall <- wiop(Y,D,X,rl, ML = MLiop)
+      }
+      else if (WF == "IOp"){
+        WTall <- wiop(Y = Y,
+                      D = D,
+                      X = X,
+                      rule = rl,
+                      est_method = est_method,
+                      MLiop = MLiop,
+                      MLps = MLps,
+                      CF = CF,
+                      K = K)
         WT[rr] <- WTall$Welfare
         muT[rr] <- WTall$Mean
         GT[rr] <- WTall$IOp
-      } else if (WF == "IGM"){
-        WT[rr] <- wigm(Y = Y,X1 = X1,D = D, t = tigm,rl)
-      } else if (WF == "util"){
+      }
+      else if (WF == "IGM"){
+        WT[rr] <- wigm(Y = Y,
+                       X1 = X1,
+                       D = D,
+                       X = X,
+                       rule = rl,
+                       design = design,
+                       est_method = est_method,
+                       MLps = MLps,
+                       MLalpha = MLaplha,
+                       CF = CF,
+                       K = K)
+      }
+      else if (WF == "util"){
         WTall <- wutil(Y = Y,
                        D = D,
                        X = X,

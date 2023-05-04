@@ -13,7 +13,8 @@ wineq(
   est_method = c("PI", "LR"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
   MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-  CF = FALSE
+  CF = TRUE,
+  K = 5
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ or locally robust estimators}
 \item{MLalpha}{Choice of machine learner for additional nuisance parameter}
 
 \item{CF}{Whether to use Cross-fitting}
+
+\item{K}{Number of folds in Cross-fitting}
 }
 \value{
 A list with the output and a figure.

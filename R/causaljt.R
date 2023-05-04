@@ -27,7 +27,7 @@ causaljt <- function(Y,
                      D,
                      X,
                      design = c("rct","observational"),
-                     method = c("ipw","aipw"),
+                     method = c("meandiff","ols","directmethod", "ipw","lr"),
                      estimand = c("ate","att"),
                      MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
                      MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
@@ -38,13 +38,23 @@ causaljt <- function(Y,
                      cvreg = FALSE,
                      Kcv = 5,
                      trimm = NULL){
+D <- as.numeric(D)
+Y <- as.numeric(Y)
 if(design == "rct"){
-  if(method == "ipw"){
+  if (method == "meandiff"){
+    ate <- mean(Y[D == 1]) - mean(Y[D == 0])
+    se <- sqrt(var(Y[D == 1])/sum(D == 1) +
+                    var(Y[D == 0])/sum(D == 0))
+    pval <- 2*(1-pnorm(abs(ate/se)))
+    return(list(results = data.frame(estimate = ate,
+                                     se = se,
+                                     pval = pval)))
+  }
+  else if (method == "ols"){
+    stop("Figure out exactly demeaning and interactions and so on")
+  }
+  else if (method == "lr"){
     p <- mean(D)
-    ipw <- mean(Y*D/p + Y*(1-D)/(1-p))
-    se <- sqrt(var(Y*D/p + Y*(1-D)/(1-p))/length(Y))
-    return(list(results = data.frame(estimate = ipw, se = se)))
-  } else if (method == "aipw"){
     if (CF == TRUE){
       n <- length(Y)
       if (cvreg == TRUE){
@@ -73,10 +83,11 @@ if(design == "rct"){
         fv0[ind[[i]]] <- ML::FVest(mfv0, X0,Y0$Y,
                                    X[ind[[i]],],Y[ind[[i]]],ML = MLreg)
       }
-      ipwlr_sc <- fv1 - fv0 + (D/p)*(Y-fv1) - ((1-D)/(1-p))*(Y-fv0)
-      ipwlr <- mean(ipwlr_sc)
-      se_lr <- sd(ipwlr_sc)/sqrt(n)
-      return(list(results = data.frame(estimate = ipwlr, se = se_lr,
+      ate_sc <- fv1 - fv0 + (D/p)*(Y-fv1) - ((1-D)/(1-p))*(Y-fv0)
+      ate <- mean(ate_sc)
+      se <- sd(ate_sc)/sqrt(n)
+      pval <- 2*(1-pnorm(abs(ate/se)))
+      return(list(results = data.frame(estimate = ate, se = se, pval = pval,
                                        MLreg = MLreg,rmsereg = MLregrmse)))
     } else if (CF == FALSE){
       if (cvreg == FALSE){
@@ -100,17 +111,58 @@ if(design == "rct"){
         fv0 <- ML::FVest(m1,X[D==0,],Y[D==0],
                          X,Y,ML = MLreg)
       }
-      ipwlr_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-      ipwlr <- mean(ipwlr_sc)
-      return(list(results = data.frame(estimate = ipwlr, se = NA,
+      ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
+      ate <- mean(ipwlr_sc)
+      return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                        MLreg = MLreg,rmsereg = MLregrmse)))
     }
   }
+  else {stop("For RCT designs method has to be either meandiff,
+             ols or lr")}
 
 }
 if(design == "observational"){
   if (estimand == "ate"){
-    if (method == "ipw"){
+    if (method == "meandiff"){
+      ate <- mean(Y[D == 1]) - mean(Y[D == 0])
+      se <- sqrt(var(Y[D == 1])/sum(D == 1) +
+                   var(Y[D == 0])/sum(D == 0))
+      pval <- 2*(1-pnorm(abs(ate/se)))
+      return(list(results = data.frame(estimate = ate,
+                                       se = se,
+                                       pval = pval)))
+    }
+    else if (method == "ols"){
+      stop("make sure you know the correct ols with observational data")
+    }
+    else if (method == "directmethod"){
+      if (cvreg == FALSE){
+        m1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
+        fv1 <- ML::FVest(m1,X[D==1,],Y[D==1],
+                         X,Y,ML = MLreg)
+        m0 <- ML::modest(X[D==0,],Y[D==0],ML = MLreg)
+        fv0 <- ML::FVest(m1,X[D==0,],Y[D==0],
+                         X,Y,ML = MLreg)
+        MLregrmse <- NA
+      }
+      else if (cvreg == TRUE){
+        cvregm <- ML::MLcv(X,Y,ML = MLreg,
+                           Kcv = Kcv)
+        MLreg <- cvregm$mlbest
+        MLregrmse <- cvregm$rmse
+        m1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
+        fv1 <- ML::FVest(m1,X[D==1,],Y[D==1],
+                         X,Y,ML = MLreg)
+        m0 <- ML::modest(X[D==0,],Y[D==0],ML = MLreg)
+        fv0 <- ML::FVest(m1,X[D==0,],Y[D==0],
+                         X,Y,ML = MLreg)
+      }
+      ate_sc <- fv1 - fv0
+      ate <- mean(ipwlr_sc)
+      return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
+                                       MLreg = MLreg,rmsereg = MLregrmse)))
+    }
+    else if (method == "ipw"){
       if (cvps == FALSE){
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
@@ -131,7 +183,7 @@ if(design == "observational"){
         Y <- Y[trps]
         ps <- ps[trps]
       }
-      ipw = mean(D*Y/ps - (1-D)*Y/(1-ps))
+      ate = mean(D*Y/ps - (1-D)*Y/(1-ps))
       if (csplot == TRUE){
         c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
         c2 <- rgb(255,192,203, max = 255, alpha = 180, names = "lt.pink")
@@ -145,13 +197,13 @@ if(design == "observational"){
         axis(side = 2)
         mtext(side = 2, text = "D=0", line = 2.5, col = "pink")
         p <- recordPlot()
-        return(list(results = data.frame(estimate = ipw, se = NA,
+        return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                 MLps = MLps,rmseps = MLpsrmse), csplot = p))
       }
-      else{return(list(results = data.frame(estimate = ipw, se = NA,
+      else{return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                    MLps = MLps,rmseps = MLpsrmse)))}
   }
-    if (method == "aipw"){
+    else if (method == "lr"){
       if (CF == TRUE){
         n <- length(Y)
         if(cvps == TRUE){
@@ -199,9 +251,10 @@ if(design == "observational"){
           fv0 <- fv0[trps]
         }
         ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
-        ipwlr_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-        ipwlr <- mean(ipwlr_sc)
-        se_lr <- sd(ipwlr_sc)/sqrt(n)
+        ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
+        ate <- mean(ipwlr_sc)
+        se <- sd(ipwlr_sc)/sqrt(n)
+        pval <- 2*(1-pnorm(abs(ate/se)))
         if (csplot == TRUE){
           c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
           c2 <- rgb(255,192,203, max = 255, alpha = 180, names = "lt.pink")
@@ -215,11 +268,11 @@ if(design == "observational"){
           axis(side = 2)
           mtext(side = 2, text = "D=0", line = 2.5, col = "pink")
           p <- recordPlot()
-          return(list(results = data.frame(estimate = ipwlr, se = se_lr,
+          return(list(results = data.frame(estimate = ate, se = se, pval = pval,
                                   MLps = MLps,rmseps = MLpsrmse,
                                   MLreg = MLreg,rmsereg = MLregrmse), csplot = p))
         }
-        else{return(list(results = data.frame(estimate = ipwlr, se = se_lr,
+        else{return(list(results = data.frame(estimate = ate, se = se, pval = pval,
                                      MLps = MLps,rmseps = MLpsrmse,
                                      MLreg = MLreg,rmsereg = MLregrmse)))}
       }
@@ -267,8 +320,8 @@ if(design == "observational"){
           fv1 <- fv1[trps]
           fv0 <- fv0[trps]
         }
-        ipwlr_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-        ipwlr <- mean(ipwlr_sc)
+        ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
+        ate <- mean(ipwlr_sc)
         if (csplot == TRUE){
           c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
           c2 <- rgb(255,192,203, max = 255, alpha = 180, names = "lt.pink")
@@ -282,18 +335,27 @@ if(design == "observational"){
           axis(side = 2)
           mtext(side = 2, text = "D=0", line = 2.5, col = "pink")
           p <- recordPlot()
-          return(list(results = data.frame(estimate = ipwlr, se = NA,
+          return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                   MLps = MLps,rmseps = MLpsrmse,
                                   MLreg = MLreg,rmsereg = MLregrmse), csplot = p))
         }
-        else{return(list(results = data.frame(estimate = ipwlr, se = NA,
+        else{return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                      MLps = MLps,rmseps = MLpsrmse,
                                      MLreg = MLreg,rmsereg = MLregrmse)))}
         }
     }
   }
   if (estimand == "att"){
-    if (method == "ipw"){
+    if (method == "meandiff"){
+      stop("is there meandiff with att?")
+    }
+    else if (method == "ols"){
+      stop("figure out att with ols")
+    }
+    else if (method == "directmethod"){
+      stop("figure out att with directmethod")
+    }
+    else if (method == "ipw"){
       if (cvps == FALSE){
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
@@ -314,11 +376,11 @@ if(design == "observational"){
         Y <- Y[trps]
         ps <- ps[trps]
       }
-      ipw = mean(((D-ps)*Y)/((1-ps)*mean(D)))
-      return(list(results = data.frame(estimate = ipw, se = NA,
+      att = mean(((D-ps)*Y)/((1-ps)*mean(D)))
+      return(list(results = data.frame(estimate = att, se = NA, pval = NA,
                               MLps = MLps,rmseps = MLpsrmse)))
     }
-    if (method == "aipw"){
+    else if (method == "lr"){
       if (CF == TRUE){
         n <- length(Y)
         if(cvps == TRUE){
@@ -360,10 +422,11 @@ if(design == "observational"){
           fv0 <- fv0[trps]
         }
         ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
-        ipwlr_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
-        ipwlr <- mean(ipwlr_sc)
-        se_lr <- sd(ipwlr_sc)/sqrt(n)
-        return(list(results = data.frame(estimate = ipwlr, se = se_lr,
+        att_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
+        att <- mean(ipwlr_sc)
+        se <- sd(ipwlr_sc)/sqrt(n)
+        pval <- 2*(1-pnorm(abs(att/se)))
+        return(list(results = data.frame(estimate = att, se = se, pval = pval,
                                 MLps = MLps,rmseps = MLpsrmse,
                                 MLreg = MLreg,rmsereg = MLregrmse)))
       }
@@ -411,9 +474,9 @@ if(design == "observational"){
           fv1 <- fv1[trps]
           fv0 <- fv0[trps]
         }
-        ipwlr_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
-        ipwlr <- mean(ipwlr_sc)
-        return(list(results = data.frame(estimate = ipwlr, se = NA,
+        att_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
+        att <- mean(ipwlr_sc)
+        return(list(results = data.frame(estimate = att, se = NA, pval = pval,
                                 MLps = MLps,rmseps = MLpsrmse,
                                 MLreg = MLreg,rmsereg = MLregrmse)))
       }
