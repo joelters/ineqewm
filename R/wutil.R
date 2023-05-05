@@ -74,10 +74,10 @@ n <- length(Y)
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
           ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
-          fv1 <- ML::MLest(X[D==1,],Y[D==1],ML = MLreg,FVs = TRUE)
-          fv1 <- fv1$FVs
-          fv0 <- ML::MLest(X[D==0,],Y[D==0],ML = MLreg,FVs = TRUE)
-          fv0 <- fv0$FVs
+          mfv1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
+          fv1 <- ML::FVest(mfv1,X[D==1,],Y[D==1],X,Y,ML = MLreg)
+          mfv0 <- ML::modest(X[D==0,],Y[D==0],ML = MLreg)
+          fv0 <- ML::FVest(mfv0,X[D==0,],Y[D==0],X,Y,ML = MLreg)
           WT <- Y*(1-D)/(1-ps) +
             (fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0))*rule
           WT <- mean(WT)

@@ -52,6 +52,7 @@ ineqewm3 <-function(Y,
                    D = D,
                    X = X,
                    rule = rl0,
+                   design = design,
                    est_method = est_method,
                    MLiop = MLiop,
                    MLps = MLps,
@@ -62,17 +63,21 @@ ineqewm3 <-function(Y,
     IOp0 <- WT0all$IOp
   }
   else if (WF == "IGM"){
-    WT0 <- wigm(Y = Y,
+    WT0all <- wigm(Y = Y,
                 X1 = X1,
                 D = D,
                 X = X,
                 rule = rl0,
+                t = tigm,
                 design = design,
                 est_method = est_method,
                 MLps = MLps,
-                MLalpha = MLaplha,
+                MLalpha = MLalpha,
                 CF = CF,
                 K = K)
+    WT0 <- WT0all$Welfare
+    mu0 <- WT0all$Mean
+    G0 <- NA
   }
   else if (WF == "util"){
     WT0all <- wutil(Y = Y,
@@ -137,6 +142,7 @@ ineqewm3 <-function(Y,
                       D = D,
                       X = X,
                       rule = rl,
+                      design = design,
                       est_method = est_method,
                       MLiop = MLiop,
                       MLps = MLps,
@@ -147,7 +153,7 @@ ineqewm3 <-function(Y,
         GT <- WTall$IOp
       }
       else if (WF == "IGM"){
-        WT <- wigm(Y = Y,
+        WTall <- wigm(Y = Y,
                        X1 = X1,
                        D = D,
                        X = X,
@@ -156,10 +162,11 @@ ineqewm3 <-function(Y,
                        design = design,
                        est_method = est_method,
                        MLps = MLps,
-                       MLalpha = MLaplha,
+                       MLalpha = MLalpha,
                        CF = CF,
                        K = K)
-        muT <- NA
+        WT <- WTall$Welfare
+        muT <- WTall$Mean
         GT <- NA
       }
       else if (WF == "util"){
@@ -183,6 +190,7 @@ ineqewm3 <-function(Y,
   else if (parallel == TRUE){
     n.cores <- parallel::detectCores()
     clust <- parallel::makeCluster(n.cores)
+    parallel::clusterCall(clust, function() library(dplyr))
     parallel::clusterExport(clust, c("aa","aasum","rule",
                   "Y","X","D", "design",
                   "est_method","MLps","MLalpha",
@@ -217,6 +225,7 @@ ineqewm3 <-function(Y,
                       D = D,
                       X = X,
                       rule = rl,
+                      design = design,
                       est_method = est_method,
                       MLiop = MLiop,
                       MLps = MLps,
@@ -227,7 +236,7 @@ ineqewm3 <-function(Y,
         GT <- WTall$IOp
       }
       else if (WF == "IGM"){
-        WT <- wigm(Y = Y,
+        WTall <- wigm(Y = Y,
                    X1 = X1,
                    D = D,
                    X = X,
@@ -236,10 +245,11 @@ ineqewm3 <-function(Y,
                    design = design,
                    est_method = est_method,
                    MLps = MLps,
-                   MLalpha = MLaplha,
+                   MLalpha = MLalpha,
                    CF = CF,
                    K = K)
-        muT <- NA
+        WT <- WTall$Welfare
+        muT <- WTall$Mean
         GT <- NA
       }
       else if (WF == "util"){

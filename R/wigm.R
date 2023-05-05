@@ -161,18 +161,18 @@ wigm <- function(Y,X1,D,X,rule,t,
                 }
               }
             }
-            WT <- -abs((2/(n*(n-1)))*w-t)
-            mu <- wutil(Y = Y,D = D,X = X,rule = rule,
-                        design = design,
-                        est_method = est_method,
-                        MLps = MLps,
-                        MLreg = MLalpha,
-                        CF = CF, K = K)
-            mu <- mu$Welfare
-            return(list("Welfare" = WT, "Mean" = mu))
-            ###########################################
           }
         }
+        WT <- -abs((2/(n*(n-1)))*w-t)
+        mu <- wutil(Y = Y,D = D,X = X,rule = rule,
+                    design = design,
+                    est_method = est_method,
+                    MLps = MLps,
+                    MLreg = MLalpha,
+                    CF = CF, K = K)
+        mu <- mu$Welfare
+        return(list("Welfare" = WT, "Mean" = mu))
+        ###########################################
       }
       else if (CF == FALSE){
         ############# Estimate nuisance parameters ###################3

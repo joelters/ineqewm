@@ -4,14 +4,20 @@
 #' @param D Treatment assignment.
 #' @param X Tibble with circumstances.
 #' @param rule Treatment rule.
-#' @param ML Choice of Machine Learner
+#' @param design Whether data comes from an RCT or from observational data
+#' @param est_method Whether traditional plug in estimators are to be used
+#' or locally robust estimators
+#' @param MLiop Choice of Machine Learner for outcome regression
+#' @param MLps Choice of Machine Learner for propensity score
 #'
 #' @return A list with the output and a figure.
 #' @export
 wiop <- function(Y,D,X,rule,
+                 design = c("rct","observational"),
                  est_method = c("PI","LR"),
                  MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
                  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                 MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
                  CF = TRUE,
                  K = 5){
   D <- as.numeric(D)
@@ -19,8 +25,8 @@ wiop <- function(Y,D,X,rule,
   if (est_method == "PI"){
     p <- mean(D)
     n <- length(Y)
-    m1 <- ML::MLest(X,Y*D,ML = ML, FVs = TRUE)
-    m0 <- ML::MLest(X,Y*(1-D),ML = ML, FVs = TRUE)
+    m1 <- ML::MLest(X,Y*D,ML = MLiop, FVs = TRUE)
+    m0 <- ML::MLest(X,Y*(1-D),ML = MLiop, FVs = TRUE)
     fv1 <- m1$FVs
     fv0 <- m0$FVs
     fvt <- rule*fv1/p + (1-rule)*fv0/(1-p)
@@ -34,7 +40,13 @@ wiop <- function(Y,D,X,rule,
       }
     }
     WT <- (2/(n*(n-1)))*w
-    mu <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
+    mu <- wutil(Y = Y,D = D,X = X,rule = rule,
+                design = design,
+                est_method = est_method,
+                MLps = MLps,
+                MLreg = MLalpha,
+                CF = CF, K = K)
+    mu <- mu$Welfare
     iop <- 1 - WT/mu
   }
   else if (est_method == "LR"){
@@ -50,7 +62,7 @@ wiop <- function(Y,D,X,rule,
           ########## Obs not in Ci or Cj ###################
           Xnotij <- X[c(-ind[[ii]],-ind[[jj]]),]
           Dnotij <- D[c(-ind[[ii]],-ind[[jj]])]
-          DXnotij <- as_tibble(cbind(Dnotij = Dnotij,Xnotij))
+          DXnotij <- as_tibble(cbind(D = Dnotij,Xnotij))
           Ynotij <- Y[c(-ind[[ii]],-ind[[jj]])]
           rulenotij <- rule[c(-ind[[ii]],-ind[[jj]])]
           ########## Train ps model with obs not in Ci or Cj ############
@@ -61,15 +73,16 @@ wiop <- function(Y,D,X,rule,
           mpsnotij <- mps$model
           ########## Train fvs iop model with obs not in Ci or Cj ########
           mdx <- ML::MLest(DXnotij,Ynotij,ML = MLiop,FVs = TRUE)
+          mdx <- mdx$model
           ############## Compute welfare evaluating in observations in Ci and Cj ##############
           #If we are in a triangle (Ci = Cj)
           if (ii == jj){
             Yii <- Y[ind[[ii]]]
             Xii <- X[ind[[ii]],]
             Dii <- D[ind[[ii]]]
-            DXii <- as_tibble(cbind(Dii = Dii,Xii))
-            D1Xii <- as_tibble(cbind(Dii = rep(1,nrow(Xii)),Xii))
-            D0Xii <- as_tibble(cbind(Dii = rep(0,nrow(Xii)),Xii))
+            DXii <- as_tibble(cbind(D = Dii,Xii))
+            D1Xii <- as_tibble(cbind(D = rep(1,nrow(Xii)),Xii))
+            D0Xii <- as_tibble(cbind(D = rep(0,nrow(Xii)),Xii))
             ruleii <- rule[ind[[ii]]]
             psii <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xii,Dii,ML = MLps)
             psii <- (psii > 0 & psii < 1)*psii +
@@ -81,7 +94,7 @@ wiop <- function(Y,D,X,rule,
             wii <- ruleii*Dii/psii + (1-ruleii)*(1-Dii)/(1-psii)
             a1 <- 1
             c11 <- 1
-            c21 <- 1
+            c12 <- 1
             c21 <- 1
             c22 <- -1
             n1 <- n-1
@@ -103,9 +116,9 @@ wiop <- function(Y,D,X,rule,
             Yij <- Y[c(ind[[ii]],ind[[jj]])]
             Xij <- X[c(ind[[ii]],ind[[jj]]),]
             Dij <- D[c(ind[[ii]],ind[[jj]])]
-            DXij <- as_tibble(cbind(Dij = Dij,Xij))
-            D1Xij <- as_tibble(cbind(Dij = rep(1,nrow(Xij)),Xij))
-            D0Xij <- as_tibble(cbind(Dij = rep(0,nrow(Xij)),Xij))
+            DXij <- as_tibble(cbind(D = Dij,Xij))
+            D1Xij <- as_tibble(cbind(D = rep(1,nrow(Xij)),Xij))
+            D0Xij <- as_tibble(cbind(D = rep(0,nrow(Xij)),Xij))
             ruleij <- rule[c(ind[[ii]],ind[[jj]])]
             psij <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xij,Dij,ML = MLps)
             psij <- (psij > 0 & psij < 1)*psij +
@@ -117,7 +130,7 @@ wiop <- function(Y,D,X,rule,
             wij <- ruleij*Dij/psij + (1-ruleij)*(1-Dij)/(1-psij)
             a1 <- 1
             c11 <- 1
-            c21 <- 1
+            c12 <- 1
             c21 <- 1
             c22 <- -1
             for (kk in 1:length(ind[[ii]])){
@@ -131,27 +144,28 @@ wiop <- function(Y,D,X,rule,
               }
             }
           }
-          WT <- (2/(n*(n-1)))*jt
-          mu <- wutil(Y = Y,D = D,X = X,rule = rule,
-                      design = design,
-                      est_method = est_method,
-                      MLps = MLps,
-                      MLreg = MLalpha,
-                      CF = CF, K = K)
-          mu <- mu$Welfare
-          G <- 1 - WT/mu
-          return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
-          ###########################################
         }
       }
+      WT <- (2/(n*(n-1)))*jt
+      mu <- wutil(Y = Y,D = D,X = X,rule = rule,
+                  design = design,
+                  est_method = est_method,
+                  MLps = MLps,
+                  MLreg = MLalpha,
+                  CF = CF, K = K)
+      mu <- mu$Welfare
+      iop <- 1 - WT/mu
+      return(list("Welfare" = WT, "Mean" = mu, "IOp" = iop))
+          ###########################################
     }
     else if (CF == FALSE){
+      n <- length(Y)
       DX <- as_tibble(cbind(D = D,X))
       mdx <- ML::MLest(DX,Y,ML = MLiop,FVs = TRUE)
       D1X <- as_tibble(cbind(D = rep(1,nrow(X)),X))
       D0X <- as_tibble(cbind(D = rep(0,nrow(X)),X))
-      fv1 <- ML::FVest(mdx,DX,Y,D1X,Y,ML = MLiop)
-      fv0 <- ML::FVest(mdx,DX,Y,D0X,Y,ML = MLiop)
+      fv1 <- ML::FVest(mdx$model,DX,Y,D1X,Y,ML = MLiop)
+      fv0 <- ML::FVest(mdx$model,DX,Y,D0X,Y,ML = MLiop)
       fvdx <- mdx$FVs
       fvt <- fv1*rule + fv0*(1-rule)
       ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
@@ -160,7 +174,7 @@ wiop <- function(Y,D,X,rule,
       w <- rule*D/ps + (1-rule)*(1-D)/(1-ps)
       a1 <- 1
       c11 <- 1
-      c21 <- 1
+      c12 <- 1
       c21 <- 1
       c22 <- -1
       n1 <- n-1

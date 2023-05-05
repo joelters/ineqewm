@@ -156,19 +156,19 @@ wineq <- function(Y,D,X,rule,
                 }
               }
             }
-            WT <- (2/(n*(n-1)))*w
-            mu <- wutil(Y = Y,D = D,X = X,rule = rule,
-                        design = design,
-                        est_method = est_method,
-                        MLps = MLps,
-                        MLreg = MLalpha,
-                        CF = CF, K = K)
-            mu <- mu$Welfare
-            G <- 1 - WT/mu
-            return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
-            ###########################################
           }
         }
+        WT <- (2/(n*(n-1)))*w
+        mu <- wutil(Y = Y,D = D,X = X,rule = rule,
+                    design = design,
+                    est_method = est_method,
+                    MLps = MLps,
+                    MLreg = MLalpha,
+                    CF = CF, K = K)
+        mu <- mu$Welfare
+        G <- 1 - WT/mu
+        return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
+        ###########################################
       }
       else if (CF == FALSE){
         ############# Estimate nuisance parameters ###################3
