@@ -22,9 +22,13 @@ wigm(
 \arguments{
 \item{Y}{Outcome vector.}
 
+\item{X1}{outcome with which to compute Kendall-tau with}
+
 \item{D}{Treatment assignment.}
 
 \item{rule}{Treatment rule.}
+
+\item{t}{Target for Kendall-tau}
 
 \item{design}{Whether data comes from an RCT or from observational data}
 

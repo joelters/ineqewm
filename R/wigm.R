@@ -1,8 +1,10 @@
 #' Kendall-tau Welfare Function maximization
 #'
 #' @param Y Outcome vector.
+#' @param X1 outcome with which to compute Kendall-tau with
 #' @param D Treatment assignment.
 #' @param rule Treatment rule.
+#' @param t Target for Kendall-tau
 #' @param design Whether data comes from an RCT or from observational data
 #' @param est_method Whether traditional plug in estimators are to be used
 #' or locally robust estimators
@@ -50,7 +52,12 @@ wigm <- function(Y,X1,D,X,rule,t,
     if (est_method == "PI"){
       ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
       ps <- ps$FVs
-      ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
+      if (sum(ps<=0 | ps>=1)!= 0){
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
+        warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+      }
       n <- length(Y)
       n1 <- n-1
       w <- 0
@@ -90,8 +97,13 @@ wigm <- function(Y,X1,D,X,rule,t,
             ########## Train ps model with obs not in Ci or Cj ############
             mps <- ML::MLest(Xnotij,as.numeric(Dnotij),ML = MLps)
             psnotij <- mps$FVs
-            psnotij <- (psnotij > 0 & psnotij < 1)*psnotij +
-              0.001*(psnotij == 0) + 0.999*(psnotij >= 1)
+            if (sum(psnotij <= 0 | psnotij >= 1)!= 0){
+              psnotij <- (psnotij > 0 & psnotij < 1)*psnotij +
+              0.001*(psnotij <= 0) + 0.999*(psnotij >= 1)
+              warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+            }
             mpsnotij <- mps$model
             ######## Train alpha model with obs not in Ci or Cj ##########
             delta <- rep(0,length(Ynotij))
@@ -118,8 +130,13 @@ wigm <- function(Y,X1,D,X,rule,t,
               Dii <- D[ind[[ii]]]
               ruleii <- rule[ind[[ii]]]
               psii <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xii,Dii,ML = MLps)
-              psii <- (psii > 0 & psii < 1)*psii +
-                0.001*(psii == 0) + 0.999*(psii >= 1)
+              if (sum(psii <= 0 | psii >= 1)!= 0){
+                psii <- (psii > 0 & psii < 1)*psii +
+                0.001*(psii <= 0) + 0.999*(psii >= 1)
+                warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+              }
               alphaii <- ML::FVest(malphanotij,Xnotij,delta,
                                    Xii,delta,ML = MLalpha)
               nn1 <- length(Yii) - 1
@@ -144,8 +161,13 @@ wigm <- function(Y,X1,D,X,rule,t,
               Dij <- D[c(ind[[ii]],ind[[jj]])]
               ruleij <- rule[c(ind[[ii]],ind[[jj]])]
               psij <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xij,Dij,ML = MLps)
-              psij <- (psij > 0 & psij < 1)*psij +
-                0.001*(psij == 0) + 0.999*(psij >= 1)
+              if (sum(psij<= 0 | psij >= 1)!= 0){
+                psij <- (psij > 0 & psij < 1)*psij +
+                0.001*(psij <= 0) + 0.999*(psij >= 1)
+                warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+              }
               alphaij <- ML::FVest(malphanotij,Xnotij,delta,
                                    Xij,delta,ML = MLalpha)
               for (kk in 1:length(ind[[ii]])){
@@ -178,7 +200,12 @@ wigm <- function(Y,X1,D,X,rule,t,
         ############# Estimate nuisance parameters ###################3
         ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
+        if (sum(ps<= 0 | ps >= 1)!=0){
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
+          warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+        }
         n <- length(Y)
         delta <- rep(0,n)
         #Estimation of alpha

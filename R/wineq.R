@@ -27,7 +27,8 @@ wineq <- function(Y,D,X,rule,
     p <- mean(D)
     n <- length(Y)
     n1 <- n-1
-    w <- 0
+    w1 <- 0
+    w2 <- 0
     for(i in 1:n1){
       # print(i)
       j1 <- i + 1
@@ -36,11 +37,12 @@ wineq <- function(Y,D,X,rule,
         a10 <- ((D[i]*(1-D[j]))/(p*(1-p)))*(rule[i]*(1-rule[j]))
         a01 <- (((1-D[i])*D[j])/((1-p)*p))*((1-rule[i])*rule[j])
         a00 <- (((1-D[i])*(1-D[j]))/((1-p)^2))*((1-rule[i])*(1-rule[j]))
-        w <- w + 0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11+a10+a01+a00)
+        w1 <- w1 + 0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11+a10+a01+a00)
+        w2 <- w2 + 0.5*(Y[i] + Y[j])*(a11+a10+a01+a00)
       }
     }
-    WT <- (2/(n*(n-1)))*w
-    mu <- mean(((Y*D)/p - Y*(1-D)/(1-p))*rule + Y*(1-D)/(1-p))
+    WT <- (2/(n*(n-1)))*w1
+    mu <- (2/(n*(n-1)))*w2
     G <- 1 - WT/mu
     return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
   }
@@ -50,10 +52,16 @@ wineq <- function(Y,D,X,rule,
     if (est_method == "PI"){
       ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
       ps <- ps$FVs
-      ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
+      if (sum(ps <= 0 | ps >= 1) != 0){
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
+        warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+      }
       n <- length(Y)
       n1 <- n-1
-      w <- 0
+      w1 <- 0
+      w2 <- 0
       for(i in 1:n1){
         # print(i)
         j1 <- i + 1
@@ -62,11 +70,12 @@ wineq <- function(Y,D,X,rule,
           a10 <- ((D[i]*(1-D[j]))/(ps[i]*(1-ps[j])))*(rule[i]*(1-rule[j]))
           a01 <- (((1-D[i])*D[j])/((1-ps[i])*ps[j]))*((1-rule[i])*rule[j])
           a00 <- (((1-D[i])*(1-D[j]))/((1-ps[i])*(1-ps[j])))*((1-rule[i])*(1-rule[j]))
-          w <- w + 0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11+a10+a01+a00)
+          w1 <- w1 + 0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11+a10+a01+a00)
+          w2 <- w2 + 0.5*(Y[i] + Y[j])*(a11+a10+a01+a00)
         }
       }
-      WT <- (2/(n*(n-1)))*w
-      mu <- mean(((Y*D)/ps - Y*(1-D)/(1-ps))*rule + Y*(1-D)/(1-ps))
+      WT <- (2/(n*(n-1)))*w1
+      mu <- (2/(n*(n-1)))*w2
       G <- 1 - WT/mu
       return(list("Welfare" = WT, "Mean" = mu, "Gini" = G))
     }
@@ -89,8 +98,14 @@ wineq <- function(Y,D,X,rule,
             ########## Train ps model with obs not in Ci or Cj ############
             mps <- ML::MLest(Xnotij,as.numeric(Dnotij),ML = MLps)
             psnotij <- mps$FVs
-            psnotij <- (psnotij > 0 & psnotij < 1)*psnotij +
-              0.001*(psnotij == 0) + 0.999*(psnotij >= 1)
+            if (sum(psnotij <= 0 | psnotij >= 1) != 0){
+              psnotij <- (psnotij > 0 & psnotij < 1)*psnotij +
+                0.001*(psnotij <= 0) + 0.999*(psnotij >= 1)
+              warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+            }
+
             mpsnotij <- mps$model
             ######## Train alpha model with obs not in Ci or Cj ##########
             delta <- rep(0,length(Ynotij))
@@ -115,8 +130,13 @@ wineq <- function(Y,D,X,rule,
               Dii <- D[ind[[ii]]]
               ruleii <- rule[ind[[ii]]]
               psii <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xii,Dii,ML = MLps)
+              if (sum(psii <= 0 | psii >= 1) != 0){
               psii <- (psii > 0 & psii < 1)*psii +
-                0.001*(psii == 0) + 0.999*(psii >= 1)
+                0.001*(psii <= 0) + 0.999*(psii >= 1)
+                warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+              }
               alphaii <- ML::FVest(malphanotij,Xnotij,delta,
                                    Xii,delta,ML = MLalpha)
               nn1 <- length(Yii) - 1
@@ -140,8 +160,13 @@ wineq <- function(Y,D,X,rule,
               Dij <- D[c(ind[[ii]],ind[[jj]])]
               ruleij <- rule[c(ind[[ii]],ind[[jj]])]
               psij <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xij,Dij,ML = MLps)
-              psij <- (psij > 0 & psij < 1)*psij +
-                0.001*(psij == 0) + 0.999*(psij >= 1)
+              if (sum(psij <= 0 | psij >= 1)!= 0){
+                psij <- (psij > 0 & psij < 1)*psij +
+                0.001*(psij <= 0) + 0.999*(psij >= 1)
+                warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+              }
               alphaij <- ML::FVest(malphanotij,Xnotij,delta,
                                    Xij,delta,ML = MLalpha)
               for (kk in 1:length(ind[[ii]])){
@@ -174,7 +199,12 @@ wineq <- function(Y,D,X,rule,
         ############# Estimate nuisance parameters ###################3
         ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps >= 1)
+        if (sum(ps <= 0 | ps >= 1)!=0){
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
+          warning("There are estimated propensity scores outside (0,1).
+                  Values lower or equal than zero have been set to 0.001
+                  and values greter or equal than 1 have been set to 0.999")
+        }
         n <- length(Y)
         delta <- rep(0,n)
         #Estimation of alpha

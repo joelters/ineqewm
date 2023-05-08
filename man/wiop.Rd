@@ -9,9 +9,11 @@ wiop(
   D,
   X,
   rule,
+  design = c("rct", "observational"),
   est_method = c("PI", "LR"),
   MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
   CF = TRUE,
   K = 5
 )
@@ -25,7 +27,14 @@ wiop(
 
 \item{rule}{Treatment rule.}
 
-\item{ML}{Choice of Machine Learner}
+\item{design}{Whether data comes from an RCT or from observational data}
+
+\item{est_method}{Whether traditional plug in estimators are to be used
+or locally robust estimators}
+
+\item{MLiop}{Choice of Machine Learner for outcome regression}
+
+\item{MLps}{Choice of Machine Learner for propensity score}
 }
 \value{
 A list with the output and a figure.
