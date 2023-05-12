@@ -112,7 +112,7 @@ if(design == "rct"){
                          X,Y,ML = MLreg)
       }
       ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-      ate <- mean(ipwlr_sc)
+      ate <- mean(ate_sc)
       return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                        MLreg = MLreg,rmsereg = MLregrmse)))
     }
@@ -158,7 +158,7 @@ if(design == "observational"){
                          X,Y,ML = MLreg)
       }
       ate_sc <- fv1 - fv0
-      ate <- mean(ipwlr_sc)
+      ate <- mean(ate_sc)
       return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                        MLreg = MLreg,rmsereg = MLregrmse)))
     }
@@ -252,8 +252,8 @@ if(design == "observational"){
         }
         ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
         ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-        ate <- mean(ipwlr_sc)
-        se <- sd(ipwlr_sc)/sqrt(n)
+        ate <- mean(ate_sc)
+        se <- sd(ate_sc)/sqrt(n)
         pval <- 2*(1-pnorm(abs(ate/se)))
         if (csplot == TRUE){
           c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
@@ -321,7 +321,7 @@ if(design == "observational"){
           fv0 <- fv0[trps]
         }
         ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
-        ate <- mean(ipwlr_sc)
+        ate <- mean(ate_sc)
         if (csplot == TRUE){
           c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
           c2 <- rgb(255,192,203, max = 255, alpha = 180, names = "lt.pink")
@@ -423,8 +423,8 @@ if(design == "observational"){
         }
         ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
         att_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
-        att <- mean(ipwlr_sc)
-        se <- sd(ipwlr_sc)/sqrt(n)
+        att <- mean(att_sc)
+        se <- sd(att_sc)/sqrt(n)
         pval <- 2*(1-pnorm(abs(att/se)))
         return(list(results = data.frame(estimate = att, se = se, pval = pval,
                                 MLps = MLps,rmseps = MLpsrmse,
@@ -475,7 +475,7 @@ if(design == "observational"){
           fv0 <- fv0[trps]
         }
         att_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
-        att <- mean(ipwlr_sc)
+        att <- mean(att_sc)
         return(list(results = data.frame(estimate = att, se = NA, pval = pval,
                                 MLps = MLps,rmseps = MLpsrmse,
                                 MLreg = MLreg,rmsereg = MLregrmse)))
