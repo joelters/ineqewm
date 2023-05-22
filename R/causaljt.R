@@ -166,7 +166,7 @@ if(design == "observational"){
       if (cvps == FALSE){
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         MLpsrmse <- NULL
       } else if (cvps == TRUE){
         cvpsm <- ML::MLcv(X,D,ML = MLps,
@@ -175,7 +175,7 @@ if(design == "observational"){
         MLpsrmse <- cvpsm$rmse
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
       }
       if (!is.null(trimm)){
         trps <- ps >= trimm[1] & ps <= trimm[2]
@@ -250,7 +250,7 @@ if(design == "observational"){
           fv1 <- fv1[trps]
           fv0 <- fv0[trps]
         }
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
         ate <- mean(ate_sc)
         se <- sd(ate_sc)/sqrt(n)
@@ -280,7 +280,7 @@ if(design == "observational"){
         if (cvps == FALSE){
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
-          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
           MLpsrmse <- NULL
         } else if (cvps == TRUE){
           cvpsm <- ML::MLcv(X,D,ML = MLps,
@@ -289,7 +289,7 @@ if(design == "observational"){
           MLpsrmse <- cvpsm$rmse
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
-          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         }
         if (cvreg == FALSE){
           m1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
@@ -359,7 +359,7 @@ if(design == "observational"){
       if (cvps == FALSE){
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         MLpsrmse <- NULL
       } else if (cvps == TRUE){
         cvpsm <- ML::MLcv(X,D,ML = MLps,
@@ -368,7 +368,7 @@ if(design == "observational"){
         MLpsrmse <- cvpsm$rmse
         ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
       }
       if (!is.null(trimm)){
         trps <- ps >= trimm[1] & ps <= trimm[2]
@@ -421,7 +421,7 @@ if(design == "observational"){
           fv1 <- fv1[trps]
           fv0 <- fv0[trps]
         }
-        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+        ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         att_sc <- ((D-ps)*(Y-fv0))/((1-ps)*mean(D))
         att <- mean(att_sc)
         se <- sd(att_sc)/sqrt(n)
@@ -434,7 +434,7 @@ if(design == "observational"){
         if (cvps == FALSE){
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
-          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
           MLpsrmse <- NULL
         } else if (cvps == TRUE){
           cvpsm <- ML::MLcv(X,D,ML = MLps,
@@ -443,7 +443,7 @@ if(design == "observational"){
           MLpsrmse <- cvpsm$rmse
           ps <- ML::MLest(X,D,ML = MLps,FVs = TRUE)
           ps <- ps$FVs
-          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps == 0) + 0.999*(ps == 1)
+          ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         }
         if (cvreg == FALSE){
           m1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
