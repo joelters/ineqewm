@@ -24,10 +24,10 @@ wiop <- function(Y,D,X,rule,
   Y <- as.numeric(Y)
   if (est_method == "PI"){
     n <- length(Y)
-    DX <- as_tibble(cbind(D = D,X))
+    DX <- dplyr::as_tibble(cbind(D = D,X))
     mdx <- ML::MLest(DX,Y,ML = MLiop,FVs = TRUE)
-    D1X <- as_tibble(cbind(D = rep(1,nrow(X)),X))
-    D0X <- as_tibble(cbind(D = rep(0,nrow(X)),X))
+    D1X <- dplyr::as_tibble(cbind(D = rep(1,nrow(X)),X))
+    D0X <- dplyr::as_tibble(cbind(D = rep(0,nrow(X)),X))
     fv1 <- ML::FVest(mdx$model,DX,Y,D1X,Y,ML = MLiop)
     fv0 <- ML::FVest(mdx$model,DX,Y,D0X,Y,ML = MLiop)
     fvt <- fv1*rule + fv0*(1-rule)
@@ -59,7 +59,7 @@ wiop <- function(Y,D,X,rule,
           ########## Obs not in Ci or Cj ###################
           Xnotij <- X[c(-ind[[ii]],-ind[[jj]]),]
           Dnotij <- D[c(-ind[[ii]],-ind[[jj]])]
-          DXnotij <- as_tibble(cbind(D = Dnotij,Xnotij))
+          DXnotij <- dplyr::as_tibble(cbind(D = Dnotij,Xnotij))
           Ynotij <- Y[c(-ind[[ii]],-ind[[jj]])]
           rulenotij <- rule[c(-ind[[ii]],-ind[[jj]])]
           ########## Train ps model with obs not in Ci or Cj ############
@@ -82,9 +82,9 @@ wiop <- function(Y,D,X,rule,
             Yii <- Y[ind[[ii]]]
             Xii <- X[ind[[ii]],]
             Dii <- D[ind[[ii]]]
-            DXii <- as_tibble(cbind(D = Dii,Xii))
-            D1Xii <- as_tibble(cbind(D = rep(1,nrow(Xii)),Xii))
-            D0Xii <- as_tibble(cbind(D = rep(0,nrow(Xii)),Xii))
+            DXii <- dplyr::as_tibble(cbind(D = Dii,Xii))
+            D1Xii <- dplyr::as_tibble(cbind(D = rep(1,nrow(Xii)),Xii))
+            D0Xii <- dplyr::as_tibble(cbind(D = rep(0,nrow(Xii)),Xii))
             ruleii <- rule[ind[[ii]]]
             psii <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xii,Dii,ML = MLps)
             if (sum(psii <= 0 | psii >= 1)!= 0){
@@ -123,9 +123,9 @@ wiop <- function(Y,D,X,rule,
             Yij <- Y[c(ind[[ii]],ind[[jj]])]
             Xij <- X[c(ind[[ii]],ind[[jj]]),]
             Dij <- D[c(ind[[ii]],ind[[jj]])]
-            DXij <- as_tibble(cbind(D = Dij,Xij))
-            D1Xij <- as_tibble(cbind(D = rep(1,nrow(Xij)),Xij))
-            D0Xij <- as_tibble(cbind(D = rep(0,nrow(Xij)),Xij))
+            DXij <- dplyr::as_tibble(cbind(D = Dij,Xij))
+            D1Xij <- dplyr::as_tibble(cbind(D = rep(1,nrow(Xij)),Xij))
+            D0Xij <- dplyr::as_tibble(cbind(D = rep(0,nrow(Xij)),Xij))
             ruleij <- rule[c(ind[[ii]],ind[[jj]])]
             psij <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xij,Dij,ML = MLps)
             if (sum(psij <= 0 | psij >= 1)!= 0){
@@ -172,10 +172,10 @@ wiop <- function(Y,D,X,rule,
     }
     else if (CF == FALSE){
       n <- length(Y)
-      DX <- as_tibble(cbind(D = D,X))
+      DX <- dplyr::as_tibble(cbind(D = D,X))
       mdx <- ML::MLest(DX,Y,ML = MLiop,FVs = TRUE)
-      D1X <- as_tibble(cbind(D = rep(1,nrow(X)),X))
-      D0X <- as_tibble(cbind(D = rep(0,nrow(X)),X))
+      D1X <- dplyr::as_tibble(cbind(D = rep(1,nrow(X)),X))
+      D0X <- dplyr::as_tibble(cbind(D = rep(0,nrow(X)),X))
       fv1 <- ML::FVest(mdx$model,DX,Y,D1X,Y,ML = MLiop)
       fv0 <- ML::FVest(mdx$model,DX,Y,D0X,Y,ML = MLiop)
       fvdx <- mdx$FVs

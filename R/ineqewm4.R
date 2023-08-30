@@ -117,6 +117,7 @@ ineqewm4 <-function(Y,
   res <- list(Welfare = -9999)
 
   for (ii in 1:ncol(targetX)){
+    print(ii)
     for (jj in 1:length(s[[ii]])){
       leaves0 <- targetX[,ii,drop = TRUE] <= s[[ii]][jj]
       for (kk in 1:ncol(targetX)){
@@ -203,17 +204,17 @@ ineqewm4 <-function(Y,
                 data.frame(WT = WT, muT = muT, GT= GT)
               }) #here should be welfare computation
 
-
-              res2 <- list(Welfare = max(restr$WT),
-                           Mean = restr$muT[which.maX(restr$WT)],
-                           Gini = restr$GT[which.maX(restr$WT)],
+              WTs <- unlist(lapply(restr,function(u) u[[1]]))
+              res2 <- list(Welfare = max(WTs),
+                           Mean = restr[[which.max(WTs)]]$muT,
+                           Gini = restr[[which.max(WTs)]]$GT,
                            node0 = colnames(targetX[,ii]),
                            thres0 = s[[ii]][jj],
                            node1 = colnames(targetX[,kk]),
                            thres1 = s[[kk]][ll],
                            node2 = colnames(targetX[,pp]),
                            thres2 = s[[pp]][tt],
-                           rule = names(which.max(restr)))
+                           rule = names(restr)[which.max(WTs)])
               if (res$Welfare <= res2$Welfare){
                 res <- res2
               }

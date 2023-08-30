@@ -67,13 +67,13 @@ if(design == "rct"){
       fv0 <- rep(0,n)
       ind <- split(seq(n), seq(n) %% K)
       for (i in 1:K){
-        XD <- dplyr::filter(as_tibble(data.frame(Y = Y[-ind[[i]]],
+        XD <- dplyr::filter(dplyr::as_tibble(data.frame(Y = Y[-ind[[i]]],
                                                  D = D[-ind[[i]]],
                                                  X[-ind[[i]],])))
-        X1 <- XD %>% filter(D==1) %>% dplyr::select(-c("D","Y"))
-        X0 <- XD %>% filter(D==0) %>% dplyr::select(-c("D","Y"))
-        Y1 <- XD %>% filter(D==1) %>% dplyr::select(Y)
-        Y0 <- XD %>% filter(D==0) %>% dplyr::select(Y)
+        X1 <- XD %>% dplyr::filter(D==1) %>% dplyr::select(-c("D","Y"))
+        X0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(-c("D","Y"))
+        Y1 <- XD %>% dplyr::filter(D==1) %>% dplyr::select(Y)
+        Y0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(Y)
 
         mfv1 <- ML::modest(X1,Y1$Y,ML = MLreg)
         mfv0 <- ML::modest(X0,Y0$Y,ML = MLreg)
@@ -226,13 +226,13 @@ if(design == "observational"){
           mps <- ML::modest(X[-ind[[i]],],D[-ind[[i]]],ML = MLps)
           ps[ind[[i]]] <- ML::FVest(mps,X[-ind[[i]],],D[-ind[[i]]],
                                  X[ind[[i]],],D[ind[[i]]],ML = MLps)
-          XD <- dplyr::filter(as_tibble(data.frame(Y = Y[-ind[[i]]],
+          XD <- dplyr::filter(dplyr::as_tibble(data.frame(Y = Y[-ind[[i]]],
                                                    D = D[-ind[[i]]],
                                                    X[-ind[[i]],])))
-          X1 <- XD %>% filter(D==1) %>% dplyr::select(-c("D","Y"))
-          X0 <- XD %>% filter(D==0) %>% dplyr::select(-c("D","Y"))
-          Y1 <- XD %>% filter(D==1) %>% dplyr::select(Y)
-          Y0 <- XD %>% filter(D==0) %>% dplyr::select(Y)
+          X1 <- XD %>% dplyr::filter(D==1) %>% dplyr::select(-c("D","Y"))
+          X0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(-c("D","Y"))
+          Y1 <- XD %>% dplyr::filter(D==1) %>% dplyr::select(Y)
+          Y0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(Y)
 
           mfv1 <- ML::modest(X1,Y1$Y,ML = MLreg)
           mfv0 <- ML::modest(X0,Y0$Y,ML = MLreg)
@@ -403,11 +403,11 @@ if(design == "observational"){
           mps <- ML::modest(X[-ind[[i]],],D[-ind[[i]]],ML = MLps)
           ps[ind[[i]]] <- ML::FVest(mps,X[-ind[[i]],],D[-ind[[i]]],
                                      X[ind[[i]],],D[ind[[i]]],ML = MLps)
-          XD <- dplyr::filter(as_tibble(data.frame(Y = Y[-ind[[i]]],
+          XD <- dplyr::filter(dplyr::as_tibble(data.frame(Y = Y[-ind[[i]]],
                                                    D = D[-ind[[i]]],
                                                    X[-ind[[i]],])))
-          X0 <- XD %>% filter(D==0) %>% dplyr::select(-c("D","Y"))
-          Y0 <- XD %>% filter(D==0) %>% dplyr::select(Y)
+          X0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(-c("D","Y"))
+          Y0 <- XD %>% dplyr::filter(D==0) %>% dplyr::select(Y)
 
           mfv0 <- ML::modest(X0,Y0$Y,ML = MLreg)
           fv0[ind[[i]]] <- ML::FVest(mfv0, X0,Y0$Y,
