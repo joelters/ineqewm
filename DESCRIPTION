@@ -13,6 +13,9 @@ RoxygenNote: 7.2.2
 Imports:
   DescTools,
   dplyr,
+  data.table,
   ggplot2,
   ML,
-  parallel
+  parallel,
+  data.tree,
+  DiagrammeR
