@@ -50,7 +50,6 @@ ineqewm5 <-function(scores,
   for (ii in 1:ncol(targetX)){
     print(ii)
     for (jj in 1:length(s[[ii]])){
-      leaves0 <- targetX[,ii,drop = TRUE] <= s[[ii]][jj]
       for (kk in 1:ncol(targetX)){
         for (ll in 1:length(s[[kk]])){
           leaves1 <- (targetX[,ii,drop = TRUE] <= s[[ii]][jj])*
