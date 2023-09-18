@@ -1,22 +1,32 @@
 #IMPORTANT: order of observations in target X has to be the same as in scores
 # i.e. the individuals ij in score Gamma_ij have to be the same as those
 # in targetX[i] and targetX[j]
-lrpltree <- function(scores11, scores10, scores01, scores00,
-                     targetX, depth = 2, s, ns){
+Rlrpltree <- function(scores11, scores10, scores01, scores00,
+                      welfare = c("ineq","iop","igm","util"),
+                      t,
+                      targetX, depth = 2, s, ns){
   # 0) treat everyone vs treat no one
   n <- nrow(targetX)
   rl0 <- rep(0,n)
   WW0 <- c(-9999,0)
+  WW1 <- c(1,1,-9999,12)
+  WW2 <- c(1,1,1,1,1,1,-9999,1)
   W0 <- (2/(n*(n-1)))*sum(scores11[,1]*rl0[scores11[,2]]*rl0[scores11[,3]] +
                              scores10[,1]*rl0[scores10[,2]]*(1-rl0[scores10[,3]]) +
                              scores01[,1]*(1-rl0[scores01[,2]])*rl0[scores01[,3]] +
                              scores00[,1]*(1-rl0[scores00[,2]])*(1-rl0[scores00[,3]]))
+  if (welfare == "igm"){
+    W0 <- -abs(W0 - t)
+  }
 
   rl1 <- rep(1,n)
   W1 <- (2/(n*(n-1)))*sum(scores11[,1]*rl1[scores11[,2]]*rl1[scores11[,3]] +
                              scores10[,1]*rl1[scores10[,2]]*(1-rl1[scores10[,3]]) +
                              scores01[,1]*(1-rl1[scores01[,2]])*rl1[scores01[,3]] +
                              scores00[,1]*(1-rl1[scores00[,2]])*(1-rl1[scores00[,3]]))
+  if (welfare == "igm"){
+    W1 <- -abs(W1 - t)
+  }
   WW0 <- rbind(c(W0,0),c(W1,1),WW0)[which.max(c(c(W0,0)[1],c(W1,1)[1],WW0[1])),]
 
   if (depth == 0){
@@ -24,7 +34,6 @@ lrpltree <- function(scores11, scores10, scores01, scores00,
   }
 
   # 1) Do single split (rl12 means treat node1 and not node 2, rl21 treat node 2 and not node 1)
-  WW1 <- c(1,1,-9999,12)
   for (ii in 1:ncol(targetX)){
     print(ii)
     for (jj in 1:ns[ii]){
@@ -33,19 +42,24 @@ lrpltree <- function(scores11, scores10, scores01, scores00,
                                 scores10[,1]*rl12[scores10[,2]]*(1-rl12[scores10[,3]]) +
                                 scores01[,1]*(1-rl12[scores01[,2]])*rl12[scores01[,3]] +
                                 scores00[,1]*(1-rl12[scores00[,2]])*(1-rl12[scores00[,3]]))
+      if (welfare == "igm"){
+        W12 <- -abs(W12 - t)
+      }
 
       rl21 <- (targetX[,ii] > s[jj,ii])
       W21 <- (2/(n*(n-1)))*sum(scores11[,1]*rl21[scores11[,2]]*rl21[scores11[,3]] +
                                  scores10[,1]*rl21[scores10[,2]]*(1-rl21[scores10[,3]]) +
                                  scores01[,1]*(1-rl21[scores01[,2]])*rl21[scores01[,3]] +
                                  scores00[,1]*(1-rl21[scores00[,2]])*(1-rl21[scores00[,3]]))
+      if (welfare == "igm"){
+        W21 <- -abs(W21 - t)
+      }
       WW1 <- rbind(c(ii,jj,W12,12),
                    c(ii,jj,W21,21),
                    WW1)[which.max(c(c(ii,jj,W12,12)[3],c(ii,jj,W21,21)[3],WW1[3])),]
       # 2 Depth 2 tree
       if (depth == 2){
         #sub-trees
-        WW2 <- c(1,1,1,1,1,1,-9999,1)
         for (kk in 1:ncol(targetX)){
           for (ll in 1:ns[kk]){
             for (pp in 1:ncol(targetX)){
@@ -81,11 +95,21 @@ lrpltree <- function(scores11, scores10, scores01, scores00,
                                                scores10[,1]*rls[,rr][scores10[,2]]*(1-rls[,rr][scores10[,3]]) +
                                                scores01[,1]*(1-rls[,rr][scores01[,2]])*rls[,rr][scores01[,3]] +
                                                scores00[,1]*(1-rls[,rr][scores00[,2]])*(1-rls[,rr][scores00[,3]]))
-                  WW2 <- rbind(c(ii,jj,kk,ll,pp,tt,W1234,rr),
-                               WW2)[which.max(c(c(ii,jj,kk,ll,pp,tt,W1234,rr)[7],WW2[7])),]
-                  if (WW2[7] == W1234){
+                  if (welfare == "igm"){
+                    W1234 <- -abs(W1234 - t)
+                  }
+                  if (W1234 > WW2[7]){
+                    print(W1234)
+                  }
+                  if (W1234 >= WW2[7]){
+                    WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                     tnodemax <- tnode
                   }
+                  # WW2 <- rbind(c(ii,jj,kk,ll,pp,tt,W1234,rr),
+                  #              WW2)[which.max(c(c(ii,jj,kk,ll,pp,tt,W1234,rr)[7],WW2[7])),]
+                  # if (WW2[7] == W1234){
+                  #   tnodemax <- tnode
+                  # }
                 }
               }
             }

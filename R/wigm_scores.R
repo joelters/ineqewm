@@ -1,9 +1,9 @@
-#' Standard Gini Social Welfare score computation
+#' Kendall-tau Welfare Function maximization
 #'
 #' @param Y Outcome vector.
+#' @param X1 outcome with which to compute Kendall-tau with
 #' @param D Treatment assignment.
-#' @param X Covariates.
-#' @param pscore propensity score (use if known, e.g. in an RCT)
+#' @param t Target for Kendall-tau
 #' @param design Whether data comes from an RCT or from observational data
 #' @param est_method Whether traditional plug in estimators are to be used
 #' or locally robust estimators
@@ -12,15 +12,15 @@
 #' @param CF Whether to use Cross-fitting
 #' @param K Number of folds in Cross-fitting
 #'
-#' @return A matrix with scores and id of the pair
+#' @return A list with the output and a figure.
 #' @export
-wineq_scores <- function(Y,D,X,pscore,
-                         design = c("rct","observational"),
-                         est_method = c("PI","LR"),
-                         MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                         MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                         CF = TRUE,
-                         K = 5){
+wigm_scores <- function(Y,X1,D,X,pscore,t,
+                 design = c("rct","observational"),
+                 est_method = c("PI","LR"),
+                 MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                 MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                 CF = TRUE,
+                 K = 5){
   D <- as.numeric(D)
   Y <- as.numeric(Y)
   n <- length(Y)
@@ -30,24 +30,23 @@ wineq_scores <- function(Y,D,X,pscore,
   scores00 <- cbind(rep(0,0.5*n*(n-1)),rep(0,0.5*n*(n-1)),rep(0,0.5*n*(n-1)))
   ############### RCT ####################
   if (design == "rct"){
-    p <- mean(D)
     n1 <- n-1
-    cnt <- 0
+    w <- 0
     for(i in 1:n1){
       j1 <- i + 1
       for (j in j1:n){
-        cnt <- cnt + 1
-        a11 <- ((D[i]*D[j])/(pscore[i]*pscore[j]))
-        a10 <- ((D[i]*(1-D[j]))/(pscore[i]*(1-pscore[j])))
-        a01 <- (((1-D[i])*D[j])/((1-pscore[i])*pscore[j]))
-        a00 <- ((1-D[i])*(1-D[j]))/((1-pscore[i])*(1-pscore[j]))
-        scores11[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a11,
+        a11 <- ((D[i]*D[j])/(p^2))
+        a10 <- ((D[i]*(1-D[j]))/(p*(1-p)))
+        a01 <- (((1-D[i])*D[j])/((1-p)*p))
+        a00 <- (((1-D[i])*(1-D[j]))/((1-p)^2))
+
+        scores11[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a11,
                             i,j)
-        scores10[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a10,
+        scores10[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a10,
                             i,j)
-        scores01[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a01,
+        scores01[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a01,
                             i,j)
-        scores00[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a00,
+        scores00[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a00,
                             i,j)
       }
     }
@@ -59,11 +58,11 @@ wineq_scores <- function(Y,D,X,pscore,
     if (est_method == "PI"){
       ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
       ps <- ps$FVs
-      if (sum(ps <= 0 | ps >= 1) != 0){
+      if (sum(ps<=0 | ps>=1)!= 0){
         ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
         warning("There are estimated propensity scores outside (0,1).
                   Values lower or equal than zero have been set to 0.001
-                  and values greater or equal than 1 have been set to 0.999")
+                  and values greter or equal than 1 have been set to 0.999")
       }
       n1 <- n-1
       cnt <- 0
@@ -76,13 +75,14 @@ wineq_scores <- function(Y,D,X,pscore,
           a10 <- ((D[i]*(1-D[j]))/(ps[i]*(1-ps[j])))
           a01 <- (((1-D[i])*D[j])/((1-ps[i])*ps[j]))
           a00 <- (((1-D[i])*(1-D[j]))/((1-ps[i])*(1-ps[j])))
-          scores11[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a11,
+
+          scores11[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a11,
                               i,j)
-          scores10[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a10,
+          scores10[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a10,
                               i,j)
-          scores01[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a01,
+          scores01[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a01,
                               i,j)
-          scores00[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*a00,
+          scores00[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*a00,
                               i,j)
         }
       }
@@ -101,19 +101,19 @@ wineq_scores <- function(Y,D,X,pscore,
           for (jj in ii1:K){
             ########## Obs not in Ci or Cj ###################
             Xnotij <- X[c(-ind[[ii]],-ind[[jj]]),]
+            X1notij <- X1[c(-ind[[ii]],-ind[[jj]])]
             Dnotij <- D[c(-ind[[ii]],-ind[[jj]])]
             Ynotij <- Y[c(-ind[[ii]],-ind[[jj]])]
             ########## Train ps model with obs not in Ci or Cj ############
             mps <- ML::MLest(Xnotij,as.numeric(Dnotij),ML = MLps)
             psnotij <- mps$FVs
-            if (sum(psnotij <= 0 | psnotij >= 1) != 0){
+            if (sum(psnotij <= 0 | psnotij >= 1)!= 0){
               psnotij <- (psnotij > 0 & psnotij < 1)*psnotij +
                 0.001*(psnotij <= 0) + 0.999*(psnotij >= 1)
               warning("There are estimated propensity scores outside (0,1).
                   Values lower or equal than zero have been set to 0.001
-                  and values greater or equal than 1 have been set to 0.999")
+                  and values greter or equal than 1 have been set to 0.999")
             }
-
             mpsnotij <- mps$model
             ######## Train alpha model with obs not in Ci or Cj ##########
             delta11 <- rep(0,length(Ynotij))
@@ -129,13 +129,13 @@ wineq_scores <- function(Y,D,X,pscore,
                         (((1-psnotij[rr])^2)*psnotij[-rr]))
               a00 <- (((1-Dnotij[rr])*(1-Dnotij[-rr]))/
                         (((1-psnotij[rr])^2)*(1-psnotij[-rr])))
-              delta11[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a11))
-              delta10[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a10))
-              delta01[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
+              delta11[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(-a11))
+              delta10[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(-a10))
+              delta01[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
                                          abs(Ynotij[rr] - Ynotij[-rr]))*(a01))
-              delta00[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
+              delta00[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
                                          abs(Ynotij[rr] - Ynotij[-rr]))*(a00))
             }
             malphanotij11 <- ML::modest(Xnotij,delta11,ML = MLalpha)
@@ -147,15 +147,16 @@ wineq_scores <- function(Y,D,X,pscore,
             if (ii == jj){
               Yii <- Y[ind[[ii]]]
               Xii <- X[ind[[ii]],]
+              X1ii <- X1[ind[[ii]]]
               Dii <- D[ind[[ii]]]
               idii <- id[ind[[ii]]]
               psii <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xii,Dii,ML = MLps)
-              if (sum(psii <= 0 | psii >= 1) != 0){
+              if (sum(psii <= 0 | psii >= 1)!= 0){
                 psii <- (psii > 0 & psii < 1)*psii +
                   0.001*(psii <= 0) + 0.999*(psii >= 1)
                 warning("There are estimated propensity scores outside (0,1).
                   Values lower or equal than zero have been set to 0.001
-                  and values greater or equal than 1 have been set to 0.999")
+                  and values greter or equal than 1 have been set to 0.999")
               }
               alphaii11 <- ML::FVest(malphanotij11,Xnotij,delta11,
                                      Xii,delta11,ML = MLalpha)
@@ -175,18 +176,17 @@ wineq_scores <- function(Y,D,X,pscore,
                   a01 <- (((1-Dii[kk])*Dii[mm])/((1-psii[kk])*psii[mm]))
                   a00 <- (((1-Dii[kk])*(1-Dii[mm]))/((1-psii[kk])*(1-psii[mm])))
 
-
-                  scores11[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a11) +
+                  scores11[cnt,] <- c(sign(Yii[kk] - Yii[mm])*sign(X1ii[kk]-X1ii[mm])*(a11) +
                                         alphaii11[kk]*(Dii[kk]-psii[kk]) + alphaii11[mm]*(Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
-                  scores10[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a10) +
-                                        alphaii10[kk]*(Dii[kk]-psii[kk]) + alphaii10[mm]*(1-Dii[mm]- 1 + psii[mm]),
+                  scores10[cnt,] <- c(sign(Yii[kk] - Yii[mm])*sign(X1ii[kk]-X1ii[mm])*(a10) +
+                                        alphaii10[kk]*(Dii[kk]-psii[kk]) + alphaii10[mm]*(1-Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
-                  scores01[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a01) +
-                                        alphaii01[kk]*(1-Dii[kk] - 1 +psii[kk]) + alphaii01[mm]*(Dii[mm]-psii[mm]),
+                  scores01[cnt,] <- c(sign(Yii[kk] - Yii[mm])*sign(X1ii[kk]-X1ii[mm])*(a01) +
+                                        alphaii01[kk]*(1-Dii[kk]-psii[kk]) + alphaii01[mm]*(Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
-                  scores00[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a00) +
-                                        alphaii00[kk]*(1-Dii[kk]- 1 + psii[kk]) + alphaii00[mm]*(1-Dii[mm]- 1 + psii[mm]),
+                  scores00[cnt,] <- c(sign(Yii[kk] - Yii[mm])*sign(X1ii[kk]-X1ii[mm])*(a00) +
+                                        alphaii00[kk]*(1-Dii[kk]-psii[kk]) + alphaii00[mm]*(1-Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
                 }
               }
@@ -196,15 +196,16 @@ wineq_scores <- function(Y,D,X,pscore,
               #Obs in Ci and Cj stacked
               Yij <- Y[c(ind[[ii]],ind[[jj]])]
               Xij <- X[c(ind[[ii]],ind[[jj]]),]
+              X1ij <- X1[c(ind[[ii]],ind[[jj]])]
               Dij <- D[c(ind[[ii]],ind[[jj]])]
               idij <- id[c(ind[[ii]],ind[[jj]])]
               psij <- ML::FVest(mpsnotij,Xnotij,Dnotij,Xij,Dij,ML = MLps)
-              if (sum(psij <= 0 | psij >= 1)!= 0){
+              if (sum(psij<= 0 | psij >= 1)!= 0){
                 psij <- (psij > 0 & psij < 1)*psij +
                   0.001*(psij <= 0) + 0.999*(psij >= 1)
                 warning("There are estimated propensity scores outside (0,1).
                   Values lower or equal than zero have been set to 0.001
-                  and values greater or equal than 1 have been set to 0.999")
+                  and values greter or equal than 1 have been set to 0.999")
               }
               alphaij11 <- ML::FVest(malphanotij11,Xnotij,delta11,
                                      Xij,delta11,ML = MLalpha)
@@ -222,18 +223,20 @@ wineq_scores <- function(Y,D,X,pscore,
                   a10 <- ((Dij[kk]*(1-Dij[mm]))/(psij[kk]*(1-psij[mm])))
                   a01 <- (((1-Dij[kk])*Dij[mm])/((1-psij[kk])*psij[mm]))
                   a00 <- (((1-Dij[kk])*(1-Dij[mm]))/((1-psij[kk])*(1-psij[mm])))
-                  scores11[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a11) +
+
+                  scores11[cnt,] <- c(sign(Yij[kk] - Yij[mm])*sign(X1ij[kk]-X1ij[mm])*(a11) +
                                         alphaij11[kk]*(Dij[kk]-psij[kk]) + alphaij11[mm]*(Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
-                  scores10[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a10) +
-                                        alphaij10[kk]*(Dij[kk]-psij[kk]) + alphaij10[mm]*(1-Dij[mm]- 1 + psij[mm]),
+                  scores10[cnt,] <- c(sign(Yij[kk] - Yij[mm])*sign(X1ij[kk]-X1ij[mm])*(a10) +
+                                        alphaij10[kk]*(Dij[kk]-psij[kk]) + alphaij10[mm]*(1-Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
-                  scores01[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a01) +
-                                        alphaij01[kk]*(1-Dij[kk]- 1 + psij[kk]) + alphaij01[mm]*(Dij[mm]-psij[mm]),
+                  scores01[cnt,] <- c(sign(Yij[kk] - Yij[mm])*sign(X1ij[kk]-X1ij[mm])*(a01) +
+                                        alphaij01[kk]*(1-Dij[kk]-psij[kk]) + alphaij01[mm]*(Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
-                  scores00[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a00) +
-                                        alphaij00[kk]*(1-Dij[kk]- 1 + psij[kk]) + alphaij00[mm]*(1-Dij[mm]- 1 + psij[mm]),
+                  scores00[cnt,] <- c(sign(Yij[kk] - Yij[mm])*sign(X1ij[kk]-X1ij[mm])*(a00) +
+                                        alphaij00[kk]*(1-Dij[kk]-psij[kk]) + alphaij00[mm]*(1-Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
+
                 }
               }
             }
@@ -246,37 +249,25 @@ wineq_scores <- function(Y,D,X,pscore,
         ############# Estimate nuisance parameters ###################3
         ps <- ML::MLest(X,as.numeric(D),ML = MLps,FVs = TRUE)
         ps <- ps$FVs
-        if (sum(ps <= 0 | ps >= 1)!=0){
+        if (sum(ps<= 0 | ps >= 1)!=0){
           ps <- (ps > 0 & ps < 1)*ps + 0.001*(ps <= 0) + 0.999*(ps >= 1)
           warning("There are estimated propensity scores outside (0,1).
                   Values lower or equal than zero have been set to 0.001
-                  and values greater or equal than 1 have been set to 0.999")
+                  and values greter or equal than 1 have been set to 0.999")
         }
         n <- length(Y)
-        delta11 <- rep(0,n)
-        delta10 <- rep(0,n)
-        delta01 <- rep(0,n)
-        delta00 <- rep(0,n)
+        delta <- rep(0,n)
         #Estimation of alpha
         for (i in 1:n){
-          a11 <- ((D[i]*D[-i])/((ps[i]^2)*ps[-i]))
-          a10 <- ((D[i]*(1-D[-i]))/((ps[i]^2)*(1-ps[-i])))
-          a01 <- (((1-D[i])*D[-i])/(((1-ps[i])^2)*ps[-i]))
-          a00 <- (((1-D[i])*(1-D[-i]))/(((1-ps[i])^2)*(1-ps[-i])))
-          delta11[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a11))
-          delta10[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a10))
-          delta01[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a01))
-          delta00[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a00))
+          a11 <- ((D[i]*D[-i])/((ps[i]^2)*ps[-i]))*(rule[i]*rule[-i])
+          a10 <- ((D[i]*(1-D[-i]))/((ps[i]^2)*(1-ps[-i])))*(rule[i]*(1-rule[-i]))
+          a01 <- (((1-D[i])*D[-i])/(((1-ps[i])^2)*ps[-i]))*((1-rule[i])*rule[-i])
+          a00 <- (((1-D[i])*(1-D[-i]))/(((1-ps[i])^2)*(1-ps[-i])))*((1-rule[i])*(1-rule[-i]))
+          delta[i] <- mean(sign(Y[i] - Y[-i])*sign(X1[i]-X1[-i])*(a11+a10+a01+a00))
         }
-        alpha11 <- ML::MLest(X,delta11,ML = MLalpha,FVs = TRUE)
-        alpha11 <- alpha$FVs
-        alpha10 <- ML::MLest(X,delta10,ML = MLalpha,FVs = TRUE)
-        alpha10 <- alpha$FVs
-        alpha01 <- ML::MLest(X,delta01,ML = MLalpha,FVs = TRUE)
-        alpha01 <- alpha$FVs
-        alpha00 <- ML::MLest(X,delta00,ML = MLalpha,FVs = TRUE)
-        alpha00 <- alpha$FVs
-        ################## Compute Welfare #################
+        alpha <- ML::MLest(X,delta,ML = MLalpha,FVs = TRUE)
+        alpha <- alpha$FVs
+        ################## Compute Welfare #################3
         n1 <- n-1
         cnt <- 0
         for(i in 1:n1){
@@ -288,14 +279,15 @@ wineq_scores <- function(Y,D,X,pscore,
             a10 <- ((D[i]*(1-D[j]))/(ps[i]*(1-ps[j])))
             a01 <- (((1-D[i])*D[j])/((1-ps[i])*ps[j]))
             a00 <- (((1-D[i])*(1-D[j]))/((1-ps[i])*(1-ps[j])))
-            scores11[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11) +
+
+            scores11[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*(a11) +
                                   alpha11[i]*(D[i]-ps[i]) + alpha11[j]*(D[j]-ps[j]),i,j)
-            scores10[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a10) +
-                                  alpha10[i]*(D[i]-ps[i]) + alpha10[j]*(1-D[j]- 1 + ps[j]),i,j)
-            scores01[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a01) +
-                                  alpha01[i]*(1-D[i]- 1 + ps[i]) + alpha01[j]*(D[j]-ps[j]),i,j)
-            scores00[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a00) +
-                                  alpha00[i]*(1-D[i]- 1 + ps[i]) + alpha00[j]*(1-D[j]- 1 + ps[j]),i,j)
+            scores10[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*(a10) +
+                                  alpha10[i]*(D[i]-ps[i]) + alpha10[j]*(1-D[j]-ps[j]),i,j)
+            scores01[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*(a01) +
+                                  alpha01[i]*(1-D[i]-ps[i]) + alpha01[j]*(D[j]-ps[j]),i,j)
+            scores00[cnt,] <- c(sign(Y[i] - Y[j])*sign(X1[i]-X1[j])*(a00) +
+                                  alpha00[i]*(1-D[i]-ps[i]) + alpha00[j]*(1-D[j]-ps[j]),i,j)
           }
         }
         return(list(scores11,scores10,scores01,scores00))

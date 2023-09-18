@@ -269,12 +269,12 @@ if(design == "observational"){
           mtext(side = 2, text = "D=0", line = 2.5, col = "pink")
           p <- recordPlot()
           return(list(results = data.frame(estimate = ate, se = se, pval = pval,
-                                  MLps = MLps,rmseps = MLpsrmse,
-                                  MLreg = MLreg,rmsereg = MLregrmse), csplot = p))
+                                  MLps = MLps,
+                                  MLreg = MLreg), csplot = p))
         }
         else{return(list(results = data.frame(estimate = ate, se = se, pval = pval,
-                                     MLps = MLps,rmseps = MLpsrmse,
-                                     MLreg = MLreg,rmsereg = MLregrmse)))}
+                                     MLps = MLps,
+                                     MLreg = MLreg)))}
       }
       else if (CF == FALSE){
         if (cvps == FALSE){

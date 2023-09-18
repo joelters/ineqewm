@@ -7,6 +7,7 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
 
   // 0) treat everyone vs treat no one
   int n = targetX.nrow();
+  // Rprintf("%i%",n);
   NumericVector rl0(n, 0.0);
   NumericVector rl1(n, 1.0);
   NumericVector WW0(2, 0.0);
@@ -85,17 +86,22 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
     rl1_00_2[i] = rl1[scores00(_,2)[i] - 1];
   }
 
-  double W0 = (2 / (n * (n - 1))) * sum(scores11(_, 0) * rl0_11_1 * rl0_11_2 +
+  double W0 = (2.0 / (n * (n - 1))) * sum(scores11(_, 0) * rl0_11_1 * rl0_11_2 +
                scores10(_, 0) * rl0_10_1 * (1 - rl0_10_2) +
                scores01(_, 0) * (1 - rl0_01_1) * rl0_01_2 +
                scores00(_, 0) * (1 - rl0_00_1) * (1 - rl0_00_2));
+  // NumericVector v = scores00(_, 0);
+  // Rcout << "The value of scores00(_,0) : " << v;
+  // double v = (2.0 / (n * (n - 1))) * sum(scores00(_, 0) * (1 - rl0_00_1) * (1 - rl0_00_2));
+  // Rcout << "The value of scores00(_,0) : " << v;
+  // Rcout << "The value of W0 : " << W0;
   NumericVector a0(2,0.0);
   a0[0] = W0;
   a0[1] = 0;
 
 
 
-  double W1 = (2 / (n * (n - 1))) * sum(scores11(_, 0) * rl1_11_1 * rl1_11_2 +
+  double W1 = (2.0 / (n * (n - 1))) * sum(scores11(_, 0) * rl1_11_1 * rl1_11_2 +
                scores10(_, 0) * rl1_10_1 * (1 - rl1_10_2) +
                scores01(_, 0) * (1 - rl1_01_1) * rl1_01_2 +
                scores00(_, 0) * (1 - rl1_00_1) * (1 - rl1_00_2));
@@ -126,9 +132,10 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
     if (depth == 0) {
       return WW0;
     }
-
+    int ntargets = targetX.ncol();
     // 1) Do single split (rl12 means treat node1 and not node 2, rl21 treat node 2 and not node 1)
-    for (int ii = 0; ii < targetX.ncol(); ii++) {
+    for (int ii = 0; ii < ntargets; ii++) {
+      Rcout << " " << ii;
       for (int jj = 0; jj < ns[ii]; jj++) {
         int nn = targetX(_, ii).size();
         NumericVector rl12(nn);
@@ -151,7 +158,7 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
           rl12_00_2[i] = rl12[scores00(_,2)[i] - 1];
         }
 
-        double W12 = (2 / (n * (n - 1))) * sum(scores11(_, 0) * rl12_11_1 * rl12_11_2 +
+        double W12 = (2.0 / (n * (n - 1))) * sum(scores11(_, 0) * rl12_11_1 * rl12_11_2 +
                       scores10(_, 0) * rl12_10_1 * (1 - rl12_10_2) +
                       scores01(_, 0) * (1 - rl12_01_1) * rl12_01_2 +
                       scores00(_, 0) * (1 - rl12_00_1) * (1 - rl12_00_2));
@@ -178,7 +185,7 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
           rl21_00_2[i] = rl21[scores00(_,2)[i] - 1];
         }
 
-        double W21 = (2 / (n * (n - 1))) * sum(scores11(_, 0) * rl21_11_1 * rl21_11_2 +
+        double W21 = (2.0 / (n * (n - 1))) * sum(scores11(_, 0) * rl21_11_1 * rl21_11_2 +
                       scores10(_, 0) * rl21_10_1 * (1 - rl21_10_2) +
                       scores01(_, 0) * (1 - rl21_01_1) * rl21_01_2 +
                       scores00(_, 0) * (1 - rl21_00_1) * (1 - rl21_00_2));
@@ -207,7 +214,8 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
 
         int index = 0;
         double maxVal = WW1221s[0];
-        for (int i = 1; i < WW1221s.size(); i++) {
+        int sizeWW1221 = WW1221s.size();
+        for (int i = 1; i < sizeWW1221; i++) {
           if (WW1221s[i] > maxVal) {
             maxVal = WW1221s[i];
             index = i;
@@ -219,9 +227,10 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
         // 2 Depth 2 tree
         if (depth == 2) {
           //sub-trees
-          for (int kk = 0; kk < targetX.ncol(); kk++) {
-            for (int ll = 0; ll < ns[kk]; ll++) {
-              for (int pp = 0; pp < targetX.ncol(); pp++) {
+          for (int kk = 0; kk < ntargets; kk++) {
+            int nskk = ns[kk];
+            for (int ll = 0; ll < nskk; ll++) {
+              for (int pp = 0; pp < ntargets; pp++) {
                 for (int tt = 0; tt < ns[pp]; tt++) {
 
                   int nn2 = targetX(_, kk).size();
@@ -302,7 +311,7 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
                   rls(_, 10) = rl_nnnt;
                   rls(_, 11) = rl_nntn;
 
-                  for (int rr = 0; rr < rls.ncol(); rr++) {
+                  for (int rr = 0; rr < 11; rr++) {
 
                     for (int i = 0; i < jt; i++) {
                       rls_11_1[i] = rls(_,rr)[scores11(_,1)[i] - 1];
@@ -315,7 +324,7 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
                       rls_00_2[i] = rls(_,rr)[scores00(_,2)[i] - 1];
                     }
 
-                    double W1234 = (2 / (n * (n - 1))) * sum(scores11(_, 0) * rls_11_1 * rls_11_2 +
+                    double W1234 = (2.0 / (n * (n - 1))) * sum(scores11(_, 0) * rls_11_1 * rls_11_2 +
                                     scores10(_, 0) * rls_10_1 * (1 - rls_10_2) +
                                     scores01(_, 0) * (1 - rls_01_1) * rls_01_2 +
                                     scores00(_, 0) * (1 - rls_00_1) * (1 - rls_00_2));
@@ -328,6 +337,10 @@ NumericVector lrpltree(NumericMatrix scores11, NumericMatrix scores10, NumericMa
                     aa2[5] = tt + 1;
                     aa2[6] = W1234;
                     aa2[7] = rr + 1;
+
+                    if (W1234 > WW2[6]){
+                      Rcout << " " << W1234;
+                    }
 
                     if (W1234 >= WW2[6]){
                       WW2 = aa2;

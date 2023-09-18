@@ -14,10 +14,10 @@
 #' @return A list with the output and a figure.
 #' @export
 ineqewmcpp <-function(scores11,scores10,scores01,scores00,
-                    targetX,
-                    rule = c("tree","linscore"),
-                    approx = FALSE,
-                    approxmatrix = NULL){
+                      targetX,
+                      rule = c("tree","linscore"),
+                      approx = FALSE,
+                      approxmatrix = NULL){
   n <- nrow(targetX)
 
   ##################### TReeees ###########
