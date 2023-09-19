@@ -5,16 +5,17 @@
 \title{Social Welfare Function maximization}
 \usage{
 ineqewm7(
-  scores11,
-  scores10,
-  scores01,
-  scores00,
+  scores11 = NULL,
+  scores10 = NULL,
+  scores01 = NULL,
+  scores00 = NULL,
   welfare = c("ineq", "iop", "igm", "util"),
   t = 0,
   targetX,
   rule = c("tree", "linear_rule"),
+  depth = 2,
   quants = NULL,
-  verbose_tree = 1
+  verbose = 1
 )
 }
 \arguments{
@@ -32,11 +33,15 @@ ineqewm7(
 
 \item{rule}{Family of treatment rules to search from}
 
-\item{quants}{how many quantiles to split continuous vars in targetX}
+\item{quants}{vector indicating how many quantiles to split each var
+in targetX. If 0 the var is not split, i.e. quants = c(0,4) would
+leave the first var (column) in targetX unchanged and split the second
+one into quartiles.}
 
-\item{verbose_tree}{level of progress messaging. 0 none, 1 information
+\item{verbose}{level of progress messaging. For trees: 0 none, 1 information
 about the root node, 2 information about root node and first subnode,
-3 information about root node and both subnodes}
+3 information about root node and both subnodes. For linear rules: 0 none,
+1 information about first coordinate, 2 information about both coordinates.}
 }
 \value{
 A list with the output and a figure.

@@ -8,19 +8,27 @@
 #' @param t Target for Kendall-tau
 #' @param targetX Variables to use for treatment allocation
 #' @param rule Family of treatment rules to search from
-#' @param quants how many quantiles to split continuous vars in targetX
-#' @param verbose_tree level of progress messaging. 0 none, 1 information
+#' @param quants vector indicating how many quantiles to split each var
+#' in targetX. If 0 the var is not split, i.e. quants = c(0,4) would
+#' leave the first var (column) in targetX unchanged and split the second
+#' one into quartiles.
+#' @param verbose level of progress messaging. For trees: 0 none, 1 information
 #' about the root node, 2 information about root node and first subnode,
-#' 3 information about root node and both subnodes
+#' 3 information about root node and both subnodes. For linear rules: 0 none,
+#' 1 information about first coordinate, 2 information about both coordinates.
 #' @return A list with the output and a figure.
 #' @export
-ineqewm7 <-function(scores11,scores10,scores01,scores00,
+ineqewm7 <-function(scores11 = NULL,
+                    scores10 = NULL,
+                    scores01 = NULL,
+                    scores00 = NULL,
                     welfare = c("ineq","iop","igm","util"),
                     t = 0,
                     targetX,
                     rule = c("tree","linear_rule"),
+                    depth = 2,
                     quants = NULL,
-                    verbose_tree = 1){
+                    verbose = 1){
   n <- nrow(targetX)
 
   ##################### Trees ###########
@@ -62,9 +70,17 @@ ineqewm7 <-function(scores11,scores10,scores01,scores00,
       s <- do.call(cbind,s)
     }
 
-    res <- Rlrpltree(scores11, scores10, scores01, scores00,
-                     welfare, t, targetX, depth = 2, s, ns,
-                     verbose = verbose_tree)
+    res <- Rlrpltree(scores11 = scores11,
+                     scores10 = scores10,
+                     scores01 = scores01,
+                     scores00 = scores00,
+                     welfare = welfare,
+                     t = t,
+                     targetX = targetX,
+                     depth = depth,
+                     s = s,
+                     ns = ns,
+                     verbose = verbose)
     # Optimal not to treat anyone
     if (res[1,8] == 0){
       return(list(Welfare = c(Welfare = res[1,7],
@@ -157,7 +173,12 @@ ineqewm7 <-function(scores11,scores10,scores01,scores00,
   }
   if (rule == "linear_rule"){
     if (!is.null(quants)){
-      targetX <- sapply(1:ncol(targetX), function(u) assign_quantiles(targetX[,u]))
+      names_targetX <- names(targetX)
+      targetX <- sapply(1:ncol(targetX), function(u){
+        assign_quantiles(unlist(targetX[,u]),quants = quants[u])})
+      targetX <- dplyr::as_tibble(targetX)
+      names(targetX) <- names_targetX
+
     }
     X1 <- targetX[,1]
     X2 <- targetX[,2]
@@ -171,7 +192,8 @@ ineqewm7 <-function(scores11,scores10,scores01,scores00,
                         scores01 = scores01,
                         scores00 = scores00,
                         welfare = welfare,
-                        t = t)
+                        t = t,
+                        verbose = verbose)
     W0 <- res$W0
     Wg <- (res$W - W0)/W0
     return(list(Welfare = c(Welfare = res$W,
