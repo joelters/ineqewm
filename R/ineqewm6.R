@@ -25,23 +25,28 @@ ineqewm6 <-function(scores11,scores10,scores01,scores00,
   ##################### Trees ###########
   if (rule == "tree"){
     s <- NULL
-    if (approx == TRUE){
-      ns <- approxmatrix
-      for (i in 1:ncol(targetX)){
-        # s[[i]] <- round(unique(quantile(targetX[,i,drop = TRUE],
-        #                   seq(1/(ns[i]+1), ns[i]/(ns[i] + 1), 1/(ns[i]+1)),
-        #                   names = FALSE)),1)
-        s[[i]] <- round(unique(quantile(targetX[,i,drop = TRUE],
-                                        seq(1/(ns[i]+1), ns[i]/(ns[i]+1), 1/(ns[i]+1)),
-                                        names = FALSE)),1)
-      }
+    ns <- rep(0,ncol(targetX))
+    for (i in 1:ncol(targetX)){
+      s[[i]] <- sort(unique(targetX[,i,drop = TRUE]))
+      ns[i] <- length(s[[i]])
     }
-    else{
-      for (i in 1:ncol(targetX)){
-        s[[i]] <- sort(unique(targetX[,i,drop = TRUE]))
-        ns[i] <- length(s[[i]])
-      }
-    }
+    # if (approx == TRUE){
+    #   ns <- approxmatrix
+    #   for (i in 1:ncol(targetX)){
+    #     # s[[i]] <- round(unique(quantile(targetX[,i,drop = TRUE],
+    #     #                   seq(1/(ns[i]+1), ns[i]/(ns[i] + 1), 1/(ns[i]+1)),
+    #     #                   names = FALSE)),1)
+    #     s[[i]] <- round(unique(quantile(targetX[,i,drop = TRUE],
+    #                                     seq(1/(ns[i]+1), ns[i]/(ns[i]+1), 1/(ns[i]+1)),
+    #                                     names = FALSE)),1)
+    #   }
+    # }
+    # else{
+    #   for (i in 1:ncol(targetX)){
+    #     s[[i]] <- sort(unique(targetX[,i,drop = TRUE]))
+    #     ns[i] <- length(s[[i]])
+    #   }
+    # }
 
     s <- lapply(s,function(u){
       if(length(u) < max(sapply(s,function(u) length(u)))){

@@ -24,16 +24,30 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
   eps1 <- dX1min/2
 
   W <- -9999
+  s11_1 <- scores11[,1]
+  s10_1 <- scores10[,1]
+  s01_1 <- scores01[,1]
+  s00_1 <- scores00[,1]
+
+  s11_2 <- scores11[,2]
+  s10_2 <- scores10[,2]
+  s01_2 <- scores01[,2]
+  s00_2 <- scores00[,2]
+
+  s11_3 <- scores11[,3]
+  s10_3 <- scores10[,3]
+  s01_3 <- scores01[,3]
+  s00_3 <- scores00[,3]
   for (i1 in 1:nX1u){
     x1 <- X1u[i1] - eps1
     for (uu in c(-1,1)){
       sgn1 <- uu
       L <- c(sgn1*x1, -sgn1, 0)
       rl <- CXX %*% L <= 0
-      Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                             scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                             scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                             scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+      Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                             s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                             s01_1*(1-rl[s01_2])*rl[s01_3] +
+                             s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
       if (welfare == "igm"){
         Waux <- -abs(Waux - t)
       }
@@ -72,10 +86,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         #(i.e. below hyperplane)
         L <- c(x1a*x2bp - x1b*x2ap, x2ap-x2bp, x1b-x1a)
         rl <- (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -87,10 +101,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         # above x_a, above x_b, treatment assignment increasing in x2
         L <- -L
         rl = (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -102,10 +116,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         # above x_a , below x_b, treatment assignment decreasing in x2
         L <- c(x1a*x2bm - x1b*x2ap, x2ap-x2bm, x1b-x1a)
         rl <- (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -117,10 +131,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         # above x_a , below x_b, treatment assignment increasing in x2
         L <- -L
         rl <- (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -132,10 +146,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         # below x_a, above x_b, treatment assignment decreasing in x2
         L <- c(x1a*x2bp - x1b*x2am, x2am-x2bp, x1b-x1a)
         rl <- (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -147,10 +161,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
         # below x_a, above x_b, treatment assignment increasing in x2
         L <- -L
         rl <- (CXX %*% L<=0)
-        Waux <- (2/(n*(n-1)))*sum(scores11[,1]*rl[scores11[,2]]*rl[scores11[,3]] +
-                                    scores10[,1]*rl[scores10[,2]]*(1-rl[scores10[,3]]) +
-                                    scores01[,1]*(1-rl[scores01[,2]])*rl[scores01[,3]] +
-                                    scores00[,1]*(1-rl[scores00[,2]])*(1-rl[scores00[,3]]))
+        Waux <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                               s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                               s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                               s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
         if (welfare == "igm"){
           Waux <- -abs(Waux - t)
         }
@@ -170,10 +184,10 @@ linear_rules <- function(X1, X2, scores11, scores10, scores01, scores00,
   # it here again
   L0 <- c(-(X1u[1] - eps1), 1, 0)
   rl0 <- CXX %*% L0 <= 0
-  W0 <- (2/(n*(n-1)))*sum(scores11[,1]*rl0[scores11[,2]]*rl0[scores11[,3]] +
-                              scores10[,1]*rl0[scores10[,2]]*(1-rl0[scores10[,3]]) +
-                              scores01[,1]*(1-rl0[scores01[,2]])*rl0[scores01[,3]] +
-                              scores00[,1]*(1-rl0[scores00[,2]])*(1-rl0[scores00[,3]]))
+  W0 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl[s11_2]*rl[s11_3] +
+                                       s10_1*rl[s10_2]*(1-rl[s10_3]) +
+                                       s01_1*(1-rl[s01_2])*rl[s01_3] +
+                                       s00_1*(1-rl[s00_2])*(1-rl[s00_3]))
   if (welfare == "igm"){
     W0 <- -abs(W0 - t)
   }
