@@ -18,8 +18,8 @@ wutil_scores <- function(Y,D,X,rule,
                   design = c("rct","observational"),
                   est_method = c("PI","LR"),
                   pscore = NULL,
-                  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                  MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                  MLreg = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                   CF = TRUE,
                   K = 5){
   D <- as.numeric(D)

@@ -14,9 +14,9 @@
 wiop_scores <- function(Y,D,X,
                  design = c("rct","observational"),
                  est_method = c("PI","LR"),
-                 MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                 MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                 MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                 MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                 MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                 MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                  CF = TRUE,
                  K = 5){
   D <- as.numeric(D)
@@ -80,7 +80,7 @@ wiop_scores <- function(Y,D,X,
           ########## Train fvs iop model with obs not in Ci or Cj ########
           mdx <- ML::MLest(DXnotij,Ynotij,ML = MLiop,FVs = TRUE)
           mdx <- mdx$model
-          ############## Compute welfare evaluating in observations in Ci and Cj ##############
+          ############## Compute scores evaluating in observations in Ci and Cj ##############
           #If we are in a triangle (Ci = Cj)
           if (ii == jj){
             Yii <- Y[ind[[ii]]]

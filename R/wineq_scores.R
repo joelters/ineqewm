@@ -17,8 +17,8 @@
 wineq_scores <- function(Y,D,X,pscore,
                          design = c("rct","observational"),
                          est_method = c("PI","LR"),
-                         MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-                         MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+                         MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                         MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                          CF = TRUE,
                          K = 5){
   D <- as.numeric(D)
@@ -116,33 +116,33 @@ wineq_scores <- function(Y,D,X,pscore,
 
             mpsnotij <- mps$model
             ######## Train alpha model with obs not in Ci or Cj ##########
-            delta11 <- rep(0,length(Ynotij))
-            delta10 <- rep(0,length(Ynotij))
-            delta01 <- rep(0,length(Ynotij))
-            delta00 <- rep(0,length(Ynotij))
+            delta11i <- rep(0,length(Ynotij))
+            delta10i <- rep(0,length(Ynotij))
+            delta01i <- rep(0,length(Ynotij))
+            delta00i <- rep(0,length(Ynotij))
             for (rr in 1:length(Ynotij)){
-              a11 <- ((Dnotij[rr]*Dnotij[-rr])/
+              a11i <- -((Dnotij[rr]*Dnotij[-rr])/
                         ((psnotij[rr]^2)*psnotij[-rr]))
-              a10 <- ((Dnotij[rr]*(1-Dnotij[-rr]))/
+              a10i <- -((Dnotij[rr]*(1-Dnotij[-rr]))/
                         ((psnotij[rr]^2)*(1-psnotij[-rr])))
-              a01 <- (((1-Dnotij[rr])*Dnotij[-rr])/
+              a01i <- (((1-Dnotij[rr])*Dnotij[-rr])/
                         (((1-psnotij[rr])^2)*psnotij[-rr]))
-              a00 <- (((1-Dnotij[rr])*(1-Dnotij[-rr]))/
+              a00i <- (((1-Dnotij[rr])*(1-Dnotij[-rr]))/
                         (((1-psnotij[rr])^2)*(1-psnotij[-rr])))
-              delta11[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a11))
-              delta10[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a10))
-              delta01[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a01))
-              delta00[rr] <- mean(-0.5*(Ynotij[rr] + Ynotij[-rr] -
-                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a00))
+              delta11i[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a11i))
+              delta10i[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a10i))
+              delta01i[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a01i))
+              delta00i[rr] <- mean(0.5*(Ynotij[rr] + Ynotij[-rr] -
+                                         abs(Ynotij[rr] - Ynotij[-rr]))*(a00i))
             }
-            malphanotij11 <- ML::modest(Xnotij,delta11,ML = MLalpha)
-            malphanotij10 <- ML::modest(Xnotij,delta10,ML = MLalpha)
-            malphanotij01 <- ML::modest(Xnotij,delta01,ML = MLalpha)
-            malphanotij00 <- ML::modest(Xnotij,delta00,ML = MLalpha)
-            ############## Compute welfare evaluating in observations in Ci and Cj ##############
+            malphanotij11 <- ML::modest(Xnotij,delta11i,ML = MLalpha)
+            malphanotij10 <- ML::modest(Xnotij,delta10i,ML = MLalpha)
+            malphanotij01 <- ML::modest(Xnotij,delta01i,ML = MLalpha)
+            malphanotij00 <- ML::modest(Xnotij,delta00i,ML = MLalpha)
+            ############## Compute scores evaluating in observations in Ci and Cj ##############
             #If we are in a triangle (Ci = Cj)
             if (ii == jj){
               Yii <- Y[ind[[ii]]]
@@ -157,13 +157,13 @@ wineq_scores <- function(Y,D,X,pscore,
                   Values lower or equal than zero have been set to 0.001
                   and values greater or equal than 1 have been set to 0.999")
               }
-              alphaii11 <- ML::FVest(malphanotij11,Xnotij,delta11,
+              alphaii11i <- ML::FVest(malphanotij11,Xnotij,delta11,
                                      Xii,delta11,ML = MLalpha)
-              alphaii10 <- ML::FVest(malphanotij10,Xnotij,delta10,
+              alphaii10i <- ML::FVest(malphanotij10,Xnotij,delta10,
                                      Xii,delta10,ML = MLalpha)
-              alphaii01 <- ML::FVest(malphanotij01,Xnotij,delta01,
+              alphaii01i <- ML::FVest(malphanotij01,Xnotij,delta01,
                                      Xii,delta01,ML = MLalpha)
-              alphaii00 <- ML::FVest(malphanotij00,Xnotij,delta00,
+              alphaii00i <- ML::FVest(malphanotij00,Xnotij,delta00,
                                      Xii,delta00,ML = MLalpha)
               nn1 <- length(Yii) - 1
               for (kk in 1:nn1){
@@ -177,16 +177,16 @@ wineq_scores <- function(Y,D,X,pscore,
 
 
                   scores11[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a11) +
-                                        alphaii11[kk]*(Dii[kk]-psii[kk]) + alphaii11[mm]*(Dii[mm]-psii[mm]),
+                                        alphaii11i[kk]*(Dii[kk]-psii[kk]) + alphaii11i[mm]*(Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
                   scores10[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a10) +
-                                        alphaii10[kk]*(Dii[kk]-psii[kk]) + alphaii10[mm]*(1-Dii[mm]- 1 + psii[mm]),
+                                        alphaii10i[kk]*(Dii[kk]-psii[kk]) + alphaii01i[mm]*(Dii[mm] - psii[mm]),
                                       idii[kk],idii[mm])
                   scores01[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a01) +
-                                        alphaii01[kk]*(1-Dii[kk] - 1 +psii[kk]) + alphaii01[mm]*(Dii[mm]-psii[mm]),
+                                        alphaii01i[kk]*(1-Dii[kk] - 1 +psii[kk]) + alphaii10i[mm]*(Dii[mm]-psii[mm]),
                                       idii[kk],idii[mm])
                   scores00[cnt,] <- c(0.5*(Yii[kk] + Yii[mm] - abs(Yii[kk] - Yii[mm]))*(a00) +
-                                        alphaii00[kk]*(1-Dii[kk]- 1 + psii[kk]) + alphaii00[mm]*(1-Dii[mm]- 1 + psii[mm]),
+                                        alphaii00i[kk]*(Dii[kk] - psii[kk]) + alphaii00i[mm]*(Dii[mm] - psii[mm]),
                                       idii[kk],idii[mm])
                 }
               }
@@ -206,13 +206,13 @@ wineq_scores <- function(Y,D,X,pscore,
                   Values lower or equal than zero have been set to 0.001
                   and values greater or equal than 1 have been set to 0.999")
               }
-              alphaij11 <- ML::FVest(malphanotij11,Xnotij,delta11,
+              alphaij11i <- ML::FVest(malphanotij11,Xnotij,delta11,
                                      Xij,delta11,ML = MLalpha)
-              alphaij10 <- ML::FVest(malphanotij10,Xnotij,delta10,
+              alphaij10i <- ML::FVest(malphanotij10,Xnotij,delta10,
                                      Xij,delta10,ML = MLalpha)
-              alphaij01 <- ML::FVest(malphanotij01,Xnotij,delta01,
+              alphaij01i <- ML::FVest(malphanotij01,Xnotij,delta01,
                                      Xij,delta01,ML = MLalpha)
-              alphaij00 <- ML::FVest(malphanotij00,Xnotij,delta00,
+              alphaij00i <- ML::FVest(malphanotij00,Xnotij,delta00,
                                      Xij,delta00,ML = MLalpha)
               for (kk in 1:length(ind[[ii]])){
                 mm1 <- length(ind[[ii]]) + 1
@@ -223,16 +223,16 @@ wineq_scores <- function(Y,D,X,pscore,
                   a01 <- (((1-Dij[kk])*Dij[mm])/((1-psij[kk])*psij[mm]))
                   a00 <- (((1-Dij[kk])*(1-Dij[mm]))/((1-psij[kk])*(1-psij[mm])))
                   scores11[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a11) +
-                                        alphaij11[kk]*(Dij[kk]-psij[kk]) + alphaij11[mm]*(Dij[mm]-psij[mm]),
+                                        alphaij11i[kk]*(Dij[kk]-psij[kk]) + alphaij11i[mm]*(Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
                   scores10[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a10) +
-                                        alphaij10[kk]*(Dij[kk]-psij[kk]) + alphaij10[mm]*(1-Dij[mm]- 1 + psij[mm]),
+                                        alphaij10i[kk]*(Dij[kk]-psij[kk]) + alphaij01i[mm]*(Dij[mm] - psij[mm]),
                                       idij[kk],idij[mm])
                   scores01[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a01) +
-                                        alphaij01[kk]*(1-Dij[kk]- 1 + psij[kk]) + alphaij01[mm]*(Dij[mm]-psij[mm]),
+                                        alphaij01i[kk]*(Dij[kk] - psij[kk]) + alphaij10i[mm]*(Dij[mm]-psij[mm]),
                                       idij[kk],idij[mm])
                   scores00[cnt,] <- c(0.5*(Yij[kk] + Yij[mm] - abs(Yij[kk] - Yij[mm]))*(a00) +
-                                        alphaij00[kk]*(1-Dij[kk]- 1 + psij[kk]) + alphaij00[mm]*(1-Dij[mm]- 1 + psij[mm]),
+                                        alphaij00i[kk]*(Dij[kk] - psij[kk]) + alphaij00i[mm]*(Dij[mm] - psij[mm]),
                                       idij[kk],idij[mm])
                 }
               }
@@ -253,30 +253,42 @@ wineq_scores <- function(Y,D,X,pscore,
                   and values greater or equal than 1 have been set to 0.999")
         }
         n <- length(Y)
-        delta11 <- rep(0,n)
-        delta10 <- rep(0,n)
-        delta01 <- rep(0,n)
-        delta00 <- rep(0,n)
+        delta11i <- rep(0,n)
+        delta10i <- rep(0,n)
+        delta01i <- rep(0,n)
+        delta00i <- rep(0,n)
+
+        delta11j <- rep(0,n)
+        delta10j <- rep(0,n)
+        delta01j <- rep(0,n)
+        delta00j <- rep(0,n)
         #Estimation of alpha
-        for (i in 1:n){
-          a11 <- ((D[i]*D[-i])/((ps[i]^2)*ps[-i]))
-          a10 <- ((D[i]*(1-D[-i]))/((ps[i]^2)*(1-ps[-i])))
-          a01 <- (((1-D[i])*D[-i])/(((1-ps[i])^2)*ps[-i]))
-          a00 <- (((1-D[i])*(1-D[-i]))/(((1-ps[i])^2)*(1-ps[-i])))
-          delta11[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a11))
-          delta10[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a10))
-          delta01[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a01))
-          delta00[i] <- mean(-0.5*(Y[i] + Y[-i] - abs(Y[i] - Y[-i]))*(a00))
+        for (k in 1:n){
+          a11i <- -((D[k]*D[-k])/((ps[k]^2)*ps[-k]))
+          a10i <- -((D[k]*(1-D[-k]))/((ps[k]^2)*(1-ps[-k])))
+          a01i <- (((1-D[k])*D[-k])/(((1-ps[k])^2)*ps[-k]))
+          a00i <- (((1-D[k])*(1-D[-k]))/(((1-ps[k])^2)*(1-ps[-k])))
+
+          delta11i[k] <- mean(0.5*(Y[k] + Y[-k] - abs(Y[k] - Y[-k]))*(a11i))
+          delta10i[k] <- mean(0.5*(Y[k] + Y[-k] - abs(Y[k] - Y[-k]))*(a10i))
+          delta01i[k] <- mean(0.5*(Y[k] + Y[-k] - abs(Y[k] - Y[-k]))*(a01i))
+          delta00i[k] <- mean(0.5*(Y[k] + Y[-k] - abs(Y[k] - Y[-k]))*(a00i))
+          #we are not forgetting j, see next comments
         }
-        alpha11 <- ML::MLest(X,delta11,ML = MLalpha,FVs = TRUE)
-        alpha11 <- alpha$FVs
-        alpha10 <- ML::MLest(X,delta10,ML = MLalpha,FVs = TRUE)
-        alpha10 <- alpha$FVs
-        alpha01 <- ML::MLest(X,delta01,ML = MLalpha,FVs = TRUE)
-        alpha01 <- alpha$FVs
-        alpha00 <- ML::MLest(X,delta00,ML = MLalpha,FVs = TRUE)
-        alpha00 <- alpha$FVs
-        ################## Compute Welfare #################
+        #alpha11i(x) = alpha11j(x)
+        alpha11i <- ML::MLest(X,delta11i,ML = MLalpha,FVs = TRUE)
+        alpha11i <- alpha11i$FVs
+        #alpha10i(x) = alpha01j(x) NOTE THEY CHANGE
+        alpha10i <- ML::MLest(X,delta10i,ML = MLalpha,FVs = TRUE)
+        alpha10i <- alpha10i$FVs
+        #alpha01i(x) = alpha10j(x) NOTE THEY CHANGE
+        alpha01i <- ML::MLest(X,delta01i,ML = MLalpha,FVs = TRUE)
+        alpha01i <- alpha01i$FVs
+        #alpha11i(x) = alpha11j(x)
+        alpha00i <- ML::MLest(X,delta00i,ML = MLalpha,FVs = TRUE)
+        alpha00i <- alpha00i$FVs
+        #so no need to do everything for j
+        ################## Compute Scores #################
         n1 <- n-1
         cnt <- 0
         for(i in 1:n1){
@@ -288,14 +300,16 @@ wineq_scores <- function(Y,D,X,pscore,
             a10 <- ((D[i]*(1-D[j]))/(ps[i]*(1-ps[j])))
             a01 <- (((1-D[i])*D[j])/((1-ps[i])*ps[j]))
             a00 <- (((1-D[i])*(1-D[j]))/((1-ps[i])*(1-ps[j])))
+            #we uses alphai for aplhaj since they are equal (see previous comments),
+            #so no typos here
             scores11[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a11) +
-                                  alpha11[i]*(D[i]-ps[i]) + alpha11[j]*(D[j]-ps[j]),i,j)
+                                  alpha11i[i]*(D[i]-ps[i]) + alpha11i[j]*(D[j]-ps[j]),i,j)
             scores10[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a10) +
-                                  alpha10[i]*(D[i]-ps[i]) + alpha10[j]*(1-D[j]- 1 + ps[j]),i,j)
+                                  alpha10i[i]*(D[i]-ps[i]) + alpha01i[j]*(D[j]- ps[j]),i,j)
             scores01[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a01) +
-                                  alpha01[i]*(1-D[i]- 1 + ps[i]) + alpha01[j]*(D[j]-ps[j]),i,j)
+                                  alpha01i[i]*(D[i]- ps[i]) + alpha10i[j]*(D[j]-ps[j]),i,j)
             scores00[cnt,] <- c(0.5*(Y[i] + Y[j] - abs(Y[i] - Y[j]))*(a00) +
-                                  alpha00[i]*(1-D[i]- 1 + ps[i]) + alpha00[j]*(1-D[j]- 1 + ps[j]),i,j)
+                                  alpha00i[i]*(D[i] - ps[i]) + alpha00i[j]*(D[j] - ps[j]),i,j)
           }
         }
         return(list(scores11,scores10,scores01,scores00))
