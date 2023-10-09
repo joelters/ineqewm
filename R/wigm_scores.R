@@ -129,10 +129,10 @@ wigm_scores <- function(Y,X1,D,X,pscore,t,
                          (((1-psnotij[rr])^2)*psnotij[-rr]))
               a00i <- (((1-Dnotij[rr])*(1-Dnotij[-rr]))/
                          (((1-psnotij[rr])^2)*(1-psnotij[-rr])))
-              delta11i[rr] <- mean((sign(Y[rr] - Y[-rr])*sign(X1[rr]-X1[-rr]))*(a11i))
-              delta10i[rr] <- mean((sign(Y[rr] - Y[-rr])*sign(X1[rr]-X1[-rr]))*(a10i))
-              delta01i[rr] <- mean((sign(Y[rr] - Y[-rr])*sign(X1[rr]-X1[-rr]))*(a01i))
-              delta00i[rr] <- mean((sign(Y[rr] - Y[-rr])*sign(X1[rr]-X1[-rr]))*(a00i))
+              delta11i[rr] <- mean((sign(Ynotij[rr] - Ynotij[-rr])*sign(X1notij[rr]-X1notij[-rr]))*(a11i))
+              delta10i[rr] <- mean((sign(Ynotij[rr] - Ynotij[-rr])*sign(X1notij[rr]-X1notij[-rr]))*(a10i))
+              delta01i[rr] <- mean((sign(Ynotij[rr] - Ynotij[-rr])*sign(X1notij[rr]-X1notij[-rr]))*(a01i))
+              delta00i[rr] <- mean((sign(Ynotij[rr] - Ynotij[-rr])*sign(X1notij[rr]-X1notij[-rr]))*(a00i))
             }
             malphanotij11 <- ML::modest(Xnotij,delta11i,ML = MLalpha)
             malphanotij10 <- ML::modest(Xnotij,delta10i,ML = MLalpha)
