@@ -58,10 +58,11 @@ wutil_scores <- function(Y,D,X,rule,
         fv1 <- rep(0,n)
         fv0 <- rep(0,n)
         ps <- rep(0,n)
+        idi <- rep(0,n)
         id <- 1:n
         ind <- split(seq(n), seq(n) %% K)
         for (i in 1:K){
-          idi <- id[ind[[i]]]
+          idi[ind[[i]]] <- id[ind[[i]]]
           mps <- ML::modest(X[-ind[[i]],],D[-ind[[i]]],ML = MLps)
           ps[ind[[i]]] <- ML::FVest(mps,X[-ind[[i]],],D[-ind[[i]]],
                                     X[ind[[i]],],D[ind[[i]]],ML = MLps)
