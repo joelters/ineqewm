@@ -42,13 +42,15 @@ D <- as.numeric(D)
 Y <- as.numeric(Y)
 if(design == "rct"){
   if (method == "meandiff"){
+    ate_sc <- Y[D == 1] - Y[D == 0]
     ate <- mean(Y[D == 1]) - mean(Y[D == 0])
     se <- sqrt(var(Y[D == 1])/sum(D == 1) +
                     var(Y[D == 0])/sum(D == 0))
     pval <- 2*(1-pnorm(abs(ate/se)))
     return(list(results = data.frame(estimate = ate,
                                      se = se,
-                                     pval = pval)))
+                                     pval = pval,
+                                     scores = ate_sc)))
   }
   else if (method == "ols"){
     stop("Figure out exactly demeaning and interactions and so on")
@@ -88,7 +90,8 @@ if(design == "rct"){
       se <- sd(ate_sc)/sqrt(n)
       pval <- 2*(1-pnorm(abs(ate/se)))
       return(list(results = data.frame(estimate = ate, se = se, pval = pval,
-                                       MLreg = MLreg,rmsereg = MLregrmse)))
+                                       MLreg = MLreg,rmsereg = MLregrmse,
+                                       scores = ate_sc)))
     } else if (CF == FALSE){
       if (cvreg == FALSE){
         m1 <- ML::modest(X[D==1,],Y[D==1],ML = MLreg)
@@ -114,7 +117,8 @@ if(design == "rct"){
       ate_sc <- fv1 - fv0 + (D/ps)*(Y-fv1) - ((1-D)/(1-ps))*(Y-fv0)
       ate <- mean(ate_sc)
       return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
-                                       MLreg = MLreg,rmsereg = MLregrmse)))
+                                       MLreg = MLreg,rmsereg = MLregrmse,
+                                       scores = ate_sc)))
     }
   }
   else {stop("For RCT designs method has to be either meandiff,
@@ -124,13 +128,15 @@ if(design == "rct"){
 if(design == "observational"){
   if (estimand == "ate"){
     if (method == "meandiff"){
+      ate_sc <-  Y[D == 1] - Y[D == 0]
       ate <- mean(Y[D == 1]) - mean(Y[D == 0])
       se <- sqrt(var(Y[D == 1])/sum(D == 1) +
                    var(Y[D == 0])/sum(D == 0))
       pval <- 2*(1-pnorm(abs(ate/se)))
       return(list(results = data.frame(estimate = ate,
                                        se = se,
-                                       pval = pval)))
+                                       pval = pval,
+                                       scores = ate_sc)))
     }
     else if (method == "ols"){
       stop("make sure you know the correct ols with observational data")
@@ -160,7 +166,8 @@ if(design == "observational"){
       ate_sc <- fv1 - fv0
       ate <- mean(ate_sc)
       return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
-                                       MLreg = MLreg,rmsereg = MLregrmse)))
+                                       MLreg = MLreg,rmsereg = MLregrmse,
+                                       scores = ate_sc)))
     }
     else if (method == "ipw"){
       if (cvps == FALSE){
@@ -183,6 +190,7 @@ if(design == "observational"){
         Y <- Y[trps]
         ps <- ps[trps]
       }
+      ate_sc <- D*Y/ps - (1-D)*Y/(1-ps)
       ate = mean(D*Y/ps - (1-D)*Y/(1-ps))
       if (csplot == TRUE){
         c1 <- rgb(173,216,230,max = 255, alpha = 180, names = "lt.blue")
@@ -198,10 +206,12 @@ if(design == "observational"){
         mtext(side = 2, text = "D=0", line = 2.5, col = "pink")
         p <- recordPlot()
         return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
-                                MLps = MLps,rmseps = MLpsrmse), csplot = p))
+                                MLps = MLps,rmseps = MLpsrmse), csplot = p,
+                                scores = ate_sc))
       }
       else{return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
-                                   MLps = MLps,rmseps = MLpsrmse)))}
+                                   MLps = MLps,rmseps = MLpsrmse),
+                       scores = ate_sc))}
   }
     else if (method == "lr"){
       if (CF == TRUE){
@@ -270,11 +280,13 @@ if(design == "observational"){
           p <- recordPlot()
           return(list(results = data.frame(estimate = ate, se = se, pval = pval,
                                   MLps = MLps,
-                                  MLreg = MLreg), csplot = p))
+                                  MLreg = MLreg), csplot = p,
+                      scores = ate_sc))
         }
         else{return(list(results = data.frame(estimate = ate, se = se, pval = pval,
                                      MLps = MLps,
-                                     MLreg = MLreg)))}
+                                     MLreg = MLreg),
+                         scores = ate_sc))}
       }
       else if (CF == FALSE){
         if (cvps == FALSE){
@@ -337,11 +349,13 @@ if(design == "observational"){
           p <- recordPlot()
           return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                   MLps = MLps,rmseps = MLpsrmse,
-                                  MLreg = MLreg,rmsereg = MLregrmse), csplot = p))
+                                  MLreg = MLreg,rmsereg = MLregrmse), csplot = p,
+                      scores = ate_sc))
         }
         else{return(list(results = data.frame(estimate = ate, se = NA, pval = NA,
                                      MLps = MLps,rmseps = MLpsrmse,
-                                     MLreg = MLreg,rmsereg = MLregrmse)))}
+                                     MLreg = MLreg,rmsereg = MLregrmse),
+                         scores = ate_sc))}
         }
     }
   }
