@@ -1055,7 +1055,7 @@ linear_rules <- function(X1, X2,
                       round(100*ia/nupairs1),
                       "% complete. Second coordinate approximately ",
                       round(100*ib/(nupairs1-ib1)),
-                      "Current maximum welfare is ",
+                      "% complete. Current maximum welfare is ",
                       round(W,3),sep =""))
         }
       }
@@ -1228,7 +1228,7 @@ linear_rules <- function(X1, X2,
                       round(100*ia/nupairs1),
                       "% complete. Second coordinate approximately ",
                       round(100*ib/(nupairs1-ib1)),
-                      "Current maximum welfare is ",
+                      "% complete. Current maximum welfare is ",
                       round(W,3),sep =""))
         }
       }
@@ -1390,7 +1390,7 @@ linear_rules <- function(X1, X2,
                       round(100*ia/nupairs1),
                       "% complete. Second coordinate approximately ",
                       round(100*ib/(nupairs1-ib1)),
-                      "Current maximum welfare is ",
+                      "% complete. Current maximum welfare is ",
                       round(W,3),sep =""))
         }
       }
