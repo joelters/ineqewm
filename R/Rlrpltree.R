@@ -459,6 +459,9 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        if (W1234 == 0 & depth == 2){
+                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                        }
                       }
                     }
                   }
@@ -520,6 +523,9 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        if (W1234 == 0 & depth == 2){
+                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                        }
                       }
                     }
                   }
@@ -577,6 +583,9 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        if (W1234 == 0 & depth == 2){
+                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                        }
                       }
                     }
                   }
@@ -630,6 +639,9 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        if (W1234 == 0 & depth == 2){
+                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                        }
                       }
                     }
                   }
