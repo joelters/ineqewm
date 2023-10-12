@@ -11,8 +11,8 @@ wineq(
   rule,
   design = c("rct", "observational"),
   est_method = c("PI", "LR"),
-  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
-  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "SL"),
+  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
+  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
   CF = TRUE,
   K = 5
 )

@@ -416,7 +416,7 @@ Rlrpltree <- function(scores11 = NULL,
                                 "Subnode 2 is ",
                                 names(targetX)[pp],
                                 " (",round(100*tt/ns[pp]),"% splits completed). ",
-                                "Current Welfare is ",round(WW2[7],2),sep = ""))
+                                "Current Welfare is ",round(WW2[7],4),sep = ""))
 
                     tnode <- rl12*(targetX[,kk] <= s[ll,kk]) +
                       2*rl12*(targetX[,kk] > s[ll,kk]) +
@@ -478,7 +478,7 @@ Rlrpltree <- function(scores11 = NULL,
                             "Subnode 1 is ",
                             names(targetX)[kk],
                             " (",round(100*ll/ns[kk]),"% splits completed). ",
-                            "Current Welfare is ",round(WW2[7],2),sep = ""))
+                            "Current Welfare is ",round(WW2[7],4),sep = ""))
                 for (pp in 1:ncol(targetX)){
                   for (tt in 1:ns[pp]){
 
@@ -537,7 +537,7 @@ Rlrpltree <- function(scores11 = NULL,
             print(paste("Root node is ",
                         names(targetX)[ii],
                         " (",round(100*jj/ns[ii]),"% splits completed). ",
-                        "Current Welfare is ",round(WW2[7],2),sep = ""))
+                        "Current Welfare is ",round(WW2[7],4),sep = ""))
             for (kk in 1:ncol(targetX)){
               for (ll in 1:ns[kk]){
                 for (pp in 1:ncol(targetX)){
