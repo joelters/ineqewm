@@ -64,6 +64,8 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
           tnodemax <- rl12 + (1-rl12)*2
+          # save rule
+          rulemax <- rl12
         }
         if (W21 > WW2[7]){
           WW2[7] <- W21
@@ -75,6 +77,8 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
           tnodemax <- rl21 + (1-rl21)*2
+          # save rule
+          rulemax <- rl21
         }
         # 2 Depth 2 tree
         if (depth == 2){
@@ -131,6 +135,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -187,6 +193,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -232,9 +240,6 @@ Rlrpltree <- function(scores11 = NULL,
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
                       W1234 <- (1/n)*collapse::fsum(s11_1*r1234[s11_2] + s00_1*(1-r1234[s00_2]))
-                      if (welfare == "igm"){
-                        W1234 <- -abs(W1234 - t)
-                      }
                       if (W1234 > WW2[7]){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
@@ -242,6 +247,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -293,6 +300,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -303,7 +312,7 @@ Rlrpltree <- function(scores11 = NULL,
         }
       }
     }
-    if (depth == 2) {return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))}
+    if (depth == 2) {return(cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax))}
     else {return(c(WW1,W0))}
   }
   else if (welfare == "igm"){
@@ -327,53 +336,55 @@ Rlrpltree <- function(scores11 = NULL,
     WW0 <- c(-9999,0)
     WW1 <- c(1,1,-9999,12)
     WW2 <- c(1,1,1,1,1,1,-9999,1)
-    W0 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl0[s11_2]*rl0[s11_3] +
+    tau0 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl0[s11_2]*rl0[s11_3] +
                                          s10_1*rl0[s10_2]*(1-rl0[s10_3]) +
                                          s01_1*(1-rl0[s01_2])*rl0[s01_3] +
                                          s00_1*(1-rl0[s00_2])*(1-rl0[s00_3]))
-    W0 <- -abs(W0 - t)
+    W0 <- -abs(tau0 - t)
 
     rl1 <- rep(1,n)
-    W1 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl1[s11_2]*rl1[s11_3] +
+    tau1 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl1[s11_2]*rl1[s11_3] +
                                          s10_1*rl1[s10_2]*(1-rl1[s10_3]) +
                                          s01_1*(1-rl1[s01_2])*rl1[s01_3] +
                                          s00_1*(1-rl1[s00_2])*(1-rl1[s00_3]))
-    W1 <- -abs(W1 - t)
+    W1 <- -abs(tau1 - t)
 
     WW0 <- rbind(c(W0,0),c(W1,1),WW0)[which.max(c(c(W0,0)[1],c(W1,1)[1],WW0[1])),]
     if (W0 > WW2[7]){
       WW2[7] <- W0
       WW2[8] <- 0
       tnodemax <- rep(0,n)
+      taumax <- tau0
     }
     if (W1 > WW2[7]){
       WW2[7] <- W1
       # we are going to indicate treat all by 99
       WW2[8] <- 99
       tnodemax <- rep(1,n)
+      taumax <- tau1
     }
 
     if (depth == 0){
-      return(WW0)
+      return(c(WW0,"tau" = taumax))
     }
 
     # 1) Do single split (rl12 means treat node1 and not node 2, rl21 treat node 2 and not node 1)
     for (ii in 1:ncol(targetX)){
       for (jj in 1:ns[ii]){
         rl12 <- (targetX[,ii] <= s[jj,ii])
-        W12 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl12[s11_2]*rl12[s11_3] +
+        tau <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl12[s11_2]*rl12[s11_3] +
                                               s10_1*rl12[s10_2]*(1-rl12[s10_3]) +
                                               s01_1*(1-rl12[s01_2])*rl12[s01_3] +
                                               s00_1*(1-rl12[s00_2])*(1-rl12[s00_3]))
-        W12 <- -abs(W12 - t)
+        W12 <- -abs(tau - t)
 
 
         rl21 <- (targetX[,ii] > s[jj,ii])
-        W21 <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl21[s11_2]*rl21[s11_3] +
+        tau <- (2/(n*(n-1)))*collapse::fsum(s11_1*rl21[s11_2]*rl21[s11_3] +
                                               s10_1*rl21[s10_2]*(1-rl21[s10_3]) +
                                               s01_1*(1-rl21[s01_2])*rl21[s01_3] +
                                               s00_1*(1-rl21[s00_2])*(1-rl21[s00_3]))
-        W21 <- -abs(W21 - t)
+        W21 <- -abs(tau - t)
         WW1 <- rbind(c(ii,jj,W12,12),
                      c(ii,jj,W21,21),
                      WW1)[which.max(c(c(ii,jj,W12,12)[3],c(ii,jj,W21,21)[3],WW1[3])),]
@@ -387,6 +398,10 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
           tnodemax <- rl12 + (1-rl12)*2
+          # save rule
+          rulemax <- rl12
+          # save Kendall-tau
+          taumax <- tau
         }
         if (W21 > WW2[7]){
           WW2[7] <- W21
@@ -398,6 +413,10 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
           tnodemax <- rl21 + (1-rl21)*2
+          # save rule
+          rulemax <- rl21
+          # save Kendall-tau
+          taumax <- tau
         }
         # 2 Depth 2 tree
         if (depth == 2){
@@ -446,11 +465,11 @@ Rlrpltree <- function(scores11 = NULL,
 
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
-                      W1234 <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
+                      tau <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      W1234 <- -abs(W1234 - t)
+                      W1234 <- -abs(tau - t)
 
                       if (W1234 > WW2[7]){
                         # ii is splitting variable at node 0 and jj the split point
@@ -459,8 +478,16 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
+                        # save Kendall-tau
+                        taumax <- tau
                         if (W1234 == 0 & depth == 2){
-                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                          # save Kendall-tau
+                          taumax <- tau
+                          jt <- cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax)
+                          jt[2,1:3] <- c(taumax,tau0,tau1)
+                          return(jt)
                         }
                       }
                     }
@@ -510,11 +537,11 @@ Rlrpltree <- function(scores11 = NULL,
 
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
-                      W1234 <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
+                      tau <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      W1234 <- -abs(W1234 - t)
+                      W1234 <- -abs(tau - t)
 
                       if (W1234 > WW2[7]){
                         # ii is splitting variable at node 0 and jj the split point
@@ -523,8 +550,16 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
+                        # save Kendall-tau
+                        taumax <- tau
                         if (W1234 == 0 & depth == 2){
-                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                          # save Kendall-tau
+                          taumax <- tau
+                          jt <- cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax)
+                          jt[2,1:3] <- c(taumax,tau0,tau1)
+                          return(jt)
                         }
                       }
                     }
@@ -570,11 +605,11 @@ Rlrpltree <- function(scores11 = NULL,
 
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
-                      W1234 <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
+                      tau <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      W1234 <- -abs(W1234 - t)
+                      W1234 <- -abs(tau - t)
 
                       if (W1234 > WW2[7]){
                         # ii is splitting variable at node 0 and jj the split point
@@ -583,8 +618,16 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
+                        # save Kendall-tau
+                        taumax <- tau
                         if (W1234 == 0 & depth == 2){
-                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                          # save Kendall-tau
+                          taumax <- tau
+                          jt <- cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax)
+                          jt[2,1:3] <- c(taumax,tau0,tau1)
+                          return(jt)
                         }
                       }
                     }
@@ -626,11 +669,11 @@ Rlrpltree <- function(scores11 = NULL,
 
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
-                      W1234 <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
+                      tau <- (2/(n*(n-1)))*collapse::fsum(s11_1* r1234[s11_2]* r1234[s11_3] +
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      W1234 <- -abs(W1234 - t)
+                      W1234 <- -abs(tau - t)
 
                       if (W1234 > WW2[7]){
                         # ii is splitting variable at node 0 and jj the split point
@@ -639,8 +682,16 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
+                        # save Kendall-tau
+                        taumax <- tau
                         if (W1234 == 0 & depth == 2){
-                          return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))
+                          # save Kendall-tau
+                          taumax <- tau
+                          jt <- cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax)
+                          jt[2,1:3] <- c(taumax,tau0,tau1)
+                          return(jt)
                         }
                       }
                     }
@@ -652,8 +703,12 @@ Rlrpltree <- function(scores11 = NULL,
         }
       }
     }
-    if (depth == 2) {return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))}
-    else {return(c(WW1,W0))}
+    if (depth == 2) {
+      jt <- cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax)
+      jt[2,1:3] <- c(taumax,tau0,tau1)
+      return(jt)
+    }
+    else {return(c(WW1,W0,W1,taumax))}
   }
   else {
     s11_1 <- scores11[,1]
@@ -731,6 +786,8 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
           tnodemax <- rl12 + (1-rl12)*2
+          # save rule
+          rulemax <- rl12
         }
         if (W21 > WW2[7]){
           WW2[7] <- W21
@@ -742,6 +799,8 @@ Rlrpltree <- function(scores11 = NULL,
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
           tnodemax <- rl21 + (1-rl21)*2
+          # save rule
+          rulemax <- rl21
         }
         # 2 Depth 2 tree
         if (depth == 2){
@@ -802,6 +861,8 @@ Rlrpltree <- function(scores11 = NULL,
                       # rr is rule (ttnt, etc.)
                       WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                       tnodemax <- tnode
+                      # save rule
+                      rulemax <- r1234
                     }
                   }
                 }
@@ -862,6 +923,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        #save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -917,6 +980,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        #save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -968,6 +1033,8 @@ Rlrpltree <- function(scores11 = NULL,
                         # rr is rule (ttnt, etc.)
                         WW2 <- c(ii,jj,kk,ll,pp,tt,W1234,rr)
                         tnodemax <- tnode
+                        # save rule
+                        rulemax <- r1234
                       }
                     }
                   }
@@ -978,7 +1045,7 @@ Rlrpltree <- function(scores11 = NULL,
         }
       }
     }
-    if (depth == 2) {return(cbind(rbind(c(WW2,W0),matrix(rep(0,(n-1)*9),n-1,9)),tnodemax))}
+    if (depth == 2) {return(cbind(rbind(c(WW2,W0,W1),matrix(rep(0,(n-1)*10),n-1,10)),tnodemax,rulemax))}
     else {return(c(WW1,W0))}
   }
 }
