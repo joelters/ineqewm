@@ -46,7 +46,7 @@ ineqewm_rule <-function(scores11 = NULL,
                                          s01_1*(1-rule[s01_2])*rule[s01_3] +
                                          s00_1*(1-rule[s00_2])*(1-rule[s00_3]))
     W <- -abs(tau - t)
-    return("Welfare" = W, "tau" = tau)
+    return(list("Welfare" = W, "tau" = tau))
   }
   else {
     s11_1 <- scores11[,1]
