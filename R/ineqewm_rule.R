@@ -22,7 +22,8 @@ ineqewm_rule <-function(scores11 = NULL,
 
     s11_2 <- scores11[,2]
     s00_2 <- scores00[,2]
-    W <- (1/n)*collapse::fsum(s11_1*rule[s11_2] + s00_1*(1-rule[s00_2]))
+    n <- length()
+    W <- mean(s11_1*rule[s11_2] + s00_1*(1-rule[s00_2]))
     return("Welfare" = W)
   }
   else if (welfare == "igm"){
@@ -41,7 +42,7 @@ ineqewm_rule <-function(scores11 = NULL,
     s01_3 <- scores01[,3]
     s00_3 <- scores00[,3]
 
-    tau <- (2/(n*(n-1)))*collapse::fsum(s11_1*rule[s11_2]*rule[s11_3] +
+    tau <- mean(s11_1*rule[s11_2]*rule[s11_3] +
                                          s10_1*rule[s10_2]*(1-rule[s10_3]) +
                                          s01_1*(1-rule[s01_2])*rule[s01_3] +
                                          s00_1*(1-rule[s00_2])*(1-rule[s00_3]))
@@ -64,7 +65,7 @@ ineqewm_rule <-function(scores11 = NULL,
     s01_3 <- scores01[,3]
     s00_3 <- scores00[,3]
 
-    W <- (2/(n*(n-1)))*collapse::fsum(s11_1*rule[s11_2]*rule[s11_3] +
+    W <- mean(s11_1*rule[s11_2]*rule[s11_3] +
                                          s10_1*rule[s10_2]*(1-rule[s10_3]) +
                                          s01_1*(1-rule[s01_2])*rule[s01_3] +
                                          s00_1*(1-rule[s00_2])*(1-rule[s00_3]))
