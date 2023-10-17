@@ -22,7 +22,6 @@ ineqewm_rule <-function(scores11 = NULL,
 
     s11_2 <- scores11[,2]
     s00_2 <- scores00[,2]
-    n <- length()
     W <- mean(s11_1*rule[s11_2] + s00_1*(1-rule[s00_2]))
     return("Welfare" = W)
   }
