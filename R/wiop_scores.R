@@ -18,7 +18,9 @@ wiop_scores <- function(Y,D,X,
                  MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                  CF = TRUE,
-                 K = 5){
+                 K = 5,
+                 leaveoneout = FALSE,
+                 verbose = 2){
   D <- as.numeric(D)
   Y <- as.numeric(Y)
   n <- length(Y)
@@ -58,9 +60,12 @@ wiop_scores <- function(Y,D,X,
       ind <- split(seq(n), seq(n) %% K)
       #Loop through blocks of pairs
       cnt <- 0
-      for (ii in 1:K){
-        ii1 <- ii
-        for (jj in ii1:K){
+      cnt2 <- 0
+      K1 <- ifelse(leaveoneout == TRUE, n-1, K)
+      for (ii in 1:K1){
+        ii1 <- ifelse(leaveoneout == TRUE, ii + 1,ii)
+        K2 <- ifelse(leaveoneout == TRUE, n, K)
+        for (jj in ii1:K2){
           ########## Obs not in Ci or Cj ###################
           Xnotij <- X[c(-ind[[ii]],-ind[[jj]]),]
           Dnotij <- D[c(-ind[[ii]],-ind[[jj]])]
@@ -179,6 +184,12 @@ wiop_scores <- function(Y,D,X,
               }
             }
           }
+          if (verbose == 2){
+            print(paste(round((cnt2/((K1+1)*K1/2))*100,1),"% completed.",sep = ""))
+          }
+        }
+        if (verbose == 1){
+          print(paste(round((cnt2/((K1+1)*K1/2))*100,1),"% completed.",sep = ""))
         }
       }
       return(list(scores11,scores10,scores01,scores00))
