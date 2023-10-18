@@ -747,12 +747,14 @@ Rlrpltree <- function(scores11 = NULL,
       WW2[7] <- W0
       WW2[8] <- 0
       tnodemax <- rep(0,n)
+      rulemax <- rl0
     }
     if (W1 > WW2[7]){
       WW2[7] <- W1
       # we are going to indicate treat all by 99
       WW2[8] <- 99
       tnodemax <- rep(1,n)
+      rulemax <- rl1
     }
 
     if (depth == 0){
