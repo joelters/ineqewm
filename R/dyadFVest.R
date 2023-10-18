@@ -36,8 +36,8 @@ dyadFVest <- function(model,
   else if (shape == "square"){
     ni <- length(Ynewi)
     nj <- length(Ynewj)
-    XX <- matrix(0,n*(n-1)*0.5,ncol(Xnewi)*2)
-    YY <- rep(0,n*(n-1)*0.5)
+    XX <- matrix(0,ni*nj,ncol(Xnewi)*2)
+    YY <- rep(0,ni*nj)
     XXnew <- matrix(0,ni*nj,ncol(Xnewi)*2)
     YYnew <- rep(0,ni*nj)
     cnt <- 0
