@@ -117,7 +117,6 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
             mreg <- dyadmodest(Xnotij,
                                as.numeric(Ynotij),
                                f = g,
-                               X1 = as.numeric(X1notij),
                                ML = MLigm)
             ############## Compute scores evaluating in observations in Ci and Cj ##############
             #If we are in a triangle (Ci = Cj)
