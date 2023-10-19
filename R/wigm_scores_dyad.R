@@ -8,7 +8,7 @@
 #' @param est_method Whether traditional plug in estimators are to be used
 #' or locally robust estimators
 #' @param MLps Choice of machine learner for propensity score
-#' @param MLalpha Choice of machine learner for additional nuisance parameter
+#' @param MLigm Choice of machine learner for dyadic regression
 #' @param CF Whether to use Cross-fitting
 #' @param K Number of folds in Cross-fitting
 #'
@@ -18,7 +18,7 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                         design = c("rct","observational"),
                         est_method = c("PI","LR"),
                         MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
-                        MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                        MLigm = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
                         CF = TRUE,
                         K = 5,
                         leaveoneout = FALSE,
@@ -118,7 +118,7 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                                as.numeric(Ynotij),
                                f = g,
                                X1 = as.numeric(X1notij),
-                               ML = MLalpha)
+                               ML = MLigm)
             ############## Compute scores evaluating in observations in Ci and Cj ##############
             #If we are in a triangle (Ci = Cj)
             if (ii == jj){
@@ -142,7 +142,7 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                                  Xnewi = Xii,
                                  Ynewi = Yii,
                                  f = g,
-                                 ML = MLalpha,
+                                 ML = MLigm,
                                  shape = "triangle")
               cnt3 <- 0
               nn1 <- length(Yii) - 1
@@ -204,7 +204,7 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                                  Xnewj = XCj,
                                  Ynewj = YCj,
                                  f = g,
-                                 ML = MLalpha,
+                                 ML = MLigm,
                                  shape = "square")
               cnt3 <- 0
               for (kk in 1:length(ind[[ii]])){

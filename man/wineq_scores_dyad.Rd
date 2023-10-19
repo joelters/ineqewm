@@ -12,7 +12,7 @@ wineq_scores_dyad(
   design = c("rct", "observational"),
   est_method = c("PI", "LR"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
-  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
+  MLineq = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
   CF = TRUE,
   K = 5,
   leaveoneout = FALSE,
@@ -35,7 +35,7 @@ or locally robust estimators}
 
 \item{MLps}{Choice of machine learner for propensity score}
 
-\item{MLalpha}{Choice of machine learner for additional nuisance parameter}
+\item{MLineq}{Choice of machine learner for dyadic regression}
 
 \item{CF}{Whether to use Cross-fitting}
 
