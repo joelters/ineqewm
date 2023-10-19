@@ -1,5 +1,6 @@
-dyadmodest <- function(X,Y,f,
-                       ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL")){
+dyadcv <- function(X,Y,f,
+                   ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso"),
+                   Kcv = 5){
   #create dyads
   n <- length(Y)
   n1 <- n - 1
@@ -14,5 +15,5 @@ dyadmodest <- function(X,Y,f,
       YY[cnt] <- f(Y[i],Y[j])
     }
   }
-  ML::modest(as.data.frame(XX),YY,ML = ML)
+  ML::MLcv(as.data.frame(XX),YY,ML = ML, Kcv = Kcv)
 }

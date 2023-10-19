@@ -23,6 +23,7 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                         K = 5,
                         leaveoneout = FALSE,
                         verbose = 1){
+  warning("It is assummed that X1 belongs in X")
   D <- as.numeric(D)
   Y <- as.numeric(Y)
   n <- length(Y)
@@ -112,12 +113,11 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
             Ynotij <- Y[c(-ind[[ii]],-ind[[jj]])]
             ########## Train ps model with obs not in Ci or Cj ############
             mps <- ML::modest(Xnotij,as.numeric(Dnotij),ML = MLps)
-            g <- function(yi,yj,x1i,x1j) sign(yi - yj)*sign(x1i-x1j)
+            g <- function(yi,yj) sign(yi - yj)
             mreg <- dyadmodest(Xnotij,
                                as.numeric(Ynotij),
                                f = g,
                                X1 = as.numeric(X1notij),
-                               welfare = "igm",
                                ML = MLalpha)
             ############## Compute scores evaluating in observations in Ci and Cj ##############
             #If we are in a triangle (Ci = Cj)
@@ -142,8 +142,6 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                                  Xnewi = Xii,
                                  Ynewi = Yii,
                                  f = g,
-                                 X1newi = X1ii,
-                                 welfare = "igm",
                                  ML = MLalpha,
                                  shape = "triangle")
               cnt3 <- 0
@@ -159,17 +157,17 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                   a00 <- (((1-Dii[kk])*(1-Dii[mm]))/((1-psii[kk])*(1-psii[mm])))
 
 
-                  scores11[cnt,] <- c(regii[cnt3] +
-                                      a11*(g(Yii[kk],Yii[mm],X1ii[kk],X1ii[mm]) - regii[cnt3]),
+                  scores11[cnt,] <- c(regii[cnt3]*sign(X1ii[kk]-X1ii[mm]) +
+                                      a11*sign(X1ii[kk]-X1ii[mm])*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores10[cnt,] <- c(regii[cnt3] +
-                                      a10*(g(Yii[kk],Yii[mm],X1ii[kk],X1ii[mm]) - regii[cnt3]),
+                  scores10[cnt,] <- c(regii[cnt3]*sign(X1ii[kk]-X1ii[mm]) +
+                                      a10*sign(X1ii[kk]-X1ii[mm])*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores01[cnt,] <- c(regii[cnt3] +
-                                      a01*(g(Yii[kk],Yii[mm],X1ii[kk],X1ii[mm]) - regii[cnt3]),
+                  scores01[cnt,] <- c(regii[cnt3]*sign(X1ii[kk]-X1ii[mm]) +
+                                      a01*sign(X1ii[kk]-X1ii[mm])*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores00[cnt,] <- c(regii[cnt3] +
-                                      a00*(g(Yii[kk],Yii[mm],X1ii[kk],X1ii[mm]) - regii[cnt3]),
+                  scores00[cnt,] <- c(regii[cnt3]*sign(X1ii[kk]-X1ii[mm]) +
+                                      a00*sign(X1ii[kk]-X1ii[mm])*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
                 }
               }
@@ -206,9 +204,6 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                                  Xnewj = XCj,
                                  Ynewj = YCj,
                                  f = g,
-                                 X1newi = X1Ci,
-                                 X1newj = X1Cj,
-                                 welfare = "igm",
                                  ML = MLalpha,
                                  shape = "square")
               cnt3 <- 0
@@ -222,17 +217,17 @@ wigm_scores_dyad <- function(Y,X1,D,X,pscore,t,
                   a01 <- (((1-Dij[kk])*Dij[mm])/((1-psij[kk])*psij[mm]))
                   a00 <- (((1-Dij[kk])*(1-Dij[mm]))/((1-psij[kk])*(1-psij[mm])))
 
-                  scores11[cnt,] <- c(regij[cnt3] +
-                                      a11*(g(Yij[kk],Yij[mm],X1ij[kk],X1ij[mm]) - regij[cnt3]),
+                  scores11[cnt,] <- c(regij[cnt3]*sign(X1ij[kk]-X1ij[mm]) +
+                                      a11*sign(X1ij[kk]-X1ij[mm])*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores10[cnt,] <- c(regij[cnt3] +
-                                      a10*(g(Yij[kk],Yij[mm],X1ij[kk],X1ij[mm]) - regij[cnt3]),
+                  scores10[cnt,] <- c(regij[cnt3]*sign(X1ij[kk]-X1ij[mm]) +
+                                      a10*sign(X1ij[kk]-X1ij[mm])*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores01[cnt,] <- c(regij[cnt3] +
-                                      a01*(g(Yij[kk],Yij[mm],X1ij[kk],X1ij[mm]) - regij[cnt3]),
+                  scores01[cnt,] <- c(regij[cnt3]*sign(X1ij[kk]-X1ij[mm]) +
+                                      a01*sign(X1ij[kk]-X1ij[mm])*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores00[cnt,] <- c(regij[cnt3] +
-                                      a00*(g(Yij[kk],Yij[mm],X1ij[kk],X1ij[mm]) - regij[cnt3]),
+                  scores00[cnt,] <- c(regij[cnt3]*sign(X1ij[kk]-X1ij[mm]) +
+                                      a00*sign(X1ij[kk]-X1ij[mm])*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
 
                 }

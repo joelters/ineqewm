@@ -115,7 +115,6 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
             mreg <- dyadmodest(Xnotij,
                                as.numeric(Ynotij),
                                f = g,
-                               welfare = "ineq",
                                ML = MLalpha)
 
             ############## Compute scores evaluating in observations in Ci and Cj ##############
@@ -140,7 +139,6 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                                  Xnewi = Xii,
                                  Ynewi = Yii,
                                  f = g,
-                                 welfare = "ineq",
                                  ML = MLalpha,
                                  shape = "triangle")
               cnt3 <- 0
@@ -196,7 +194,6 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                                  Xnewj = XCj,
                                  Ynewj = YCj,
                                  f = g,
-                                 welfare = "ineq",
                                  ML = MLalpha,
                                  shape = "square")
               cnt3 <- 0

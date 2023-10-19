@@ -12,9 +12,10 @@ wiop_scores(
   est_method = c("PI", "LR"),
   MLiop = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
   MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
-  MLalpha = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB", "Logit_lasso", "SL"),
   CF = TRUE,
-  K = 5
+  K = 5,
+  leaveoneout = FALSE,
+  verbose = 2
 )
 }
 \arguments{
