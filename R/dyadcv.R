@@ -1,3 +1,11 @@
+#' dyadic ML cross-validation
+#'
+#' @param X is a dataframe containing all the features on which the model was estimated
+#' @param Y is a vector containing the labels for which the model was estimated
+#' @param f function of Yi and Yj defining the dependent variable
+#' @param ML string vector specifying which machine learners to use
+#' @param Kcv number of folds
+#' @return list containing ML attaining minimum RMSE and RMSE
 #' @export
 dyadcv <- function(X,Y,f,
                    ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso"),
