@@ -8,6 +8,7 @@ Rlrpltree <- function(scores11 = NULL,
                       welfare = c("ineq","iop","igm","util"),
                       t,
                       targetX, depth = 2, s, ns,
+                      min_node_size = 1,
                       verbose = c(0,1,2,3)){
   if (welfare == "util"){
     s11_1 <- scores11[,1]
@@ -31,12 +32,14 @@ Rlrpltree <- function(scores11 = NULL,
       WW2[7] <- W0
       WW2[8] <- 0
       tnodemax <- rep(0,n)
+      rulemax <- rl0
     }
     if (W1 > WW2[7]){
       WW2[7] <- W1
       # we are going to indicate treat all by 99
       WW2[8] <- 99
       tnodemax <- rep(1,n)
+      rulemax <- rl1
     }
 
     if (depth == 0){
@@ -54,7 +57,9 @@ Rlrpltree <- function(scores11 = NULL,
         WW1 <- rbind(c(ii,jj,W12,12),
                      c(ii,jj,W21,21),
                      WW1)[which.max(c(c(ii,jj,W12,12)[3],c(ii,jj,W21,21)[3],WW1[3])),]
-        if (W12 > WW2[7]){
+        tnode12 <- rl12 + (1-rl12)*2
+        tnode21 <- rl21 + (1-rl21)*2
+        if (W12 > WW2[7] & min(table(tnode12)) >= min_node_size){
           WW2[7] <- W12
           # we are going to indicate rule just one split treat if lower or equal by 9912
           WW2[8] <- 9912
@@ -63,11 +68,11 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
-          tnodemax <- rl12 + (1-rl12)*2
+          tnodemax <- tnode12
           # save rule
           rulemax <- rl12
         }
-        if (W21 > WW2[7]){
+        if (W21 > WW2[7] & min(table(tnode21)) >= min_node_size){
           WW2[7] <- W21
           # we are going to indicate rule just one split treat if strictly greater by 9921
           WW2[8] <- 9921
@@ -76,7 +81,7 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
-          tnodemax <- rl21 + (1-rl21)*2
+          tnodemax <- tnode21
           # save rule
           rulemax <- rl21
         }
@@ -128,7 +133,7 @@ Rlrpltree <- function(scores11 = NULL,
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
                       W1234 <- (1/n)*collapse::fsum(s11_1*r1234[s11_2] + s00_1*(1-r1234[s00_2]))
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -186,7 +191,7 @@ Rlrpltree <- function(scores11 = NULL,
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
                       W1234 <- (1/n)*collapse::fsum(s11_1*r1234[s11_2] + s00_1*(1-r1234[s00_2]))
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -240,7 +245,7 @@ Rlrpltree <- function(scores11 = NULL,
                     for (rr in 1:ncol(rls)){
                       r1234 <- rls[,rr]
                       W1234 <- (1/n)*collapse::fsum(s11_1*r1234[s11_2] + s00_1*(1-r1234[s00_2]))
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -293,7 +298,7 @@ Rlrpltree <- function(scores11 = NULL,
                       if (welfare == "igm"){
                         W1234 <- -abs(W1234 - t)
                       }
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -355,6 +360,7 @@ Rlrpltree <- function(scores11 = NULL,
       WW2[8] <- 0
       tnodemax <- rep(0,n)
       taumax <- tau0
+      rulemax <- rl0
     }
     if (W1 > WW2[7]){
       WW2[7] <- W1
@@ -362,6 +368,7 @@ Rlrpltree <- function(scores11 = NULL,
       WW2[8] <- 99
       tnodemax <- rep(1,n)
       taumax <- tau1
+      rulemax <- rl1
     }
 
     if (depth == 0){
@@ -388,7 +395,9 @@ Rlrpltree <- function(scores11 = NULL,
         WW1 <- rbind(c(ii,jj,W12,12),
                      c(ii,jj,W21,21),
                      WW1)[which.max(c(c(ii,jj,W12,12)[3],c(ii,jj,W21,21)[3],WW1[3])),]
-        if (W12 > WW2[7]){
+        tnode12 <- rl12 + (1-rl12)*2
+        tnode21 <- rl21 + (1-rl21)*2
+        if (W12 > WW2[7] & min(table(tnode12)) >= min_node_size){
           WW2[7] <- W12
           # we are going to indicate rule just one split treat if lower or equal by 9912
           WW2[8] <- 9912
@@ -397,13 +406,13 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
-          tnodemax <- rl12 + (1-rl12)*2
+          tnodemax <- tnode12
           # save rule
           rulemax <- rl12
           # save Kendall-tau
           taumax <- tau
         }
-        if (W21 > WW2[7]){
+        if (W21 > WW2[7] & min(table(tnode21)) >= min_node_size){
           WW2[7] <- W21
           # we are going to indicate rule just one split treat if strictly greater by 9921
           WW2[8] <- 9921
@@ -412,7 +421,7 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
-          tnodemax <- rl21 + (1-rl21)*2
+          tnodemax <- tnode21
           # save rule
           rulemax <- rl21
           # save Kendall-tau
@@ -471,7 +480,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
                       W1234 <- -abs(tau - t)
 
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -543,7 +552,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
                       W1234 <- -abs(tau - t)
 
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -611,7 +620,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
                       W1234 <- -abs(tau - t)
 
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -675,7 +684,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
                       W1234 <- -abs(tau - t)
 
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -778,7 +787,9 @@ Rlrpltree <- function(scores11 = NULL,
         WW1 <- rbind(c(ii,jj,W12,12),
                      c(ii,jj,W21,21),
                      WW1)[which.max(c(c(ii,jj,W12,12)[3],c(ii,jj,W21,21)[3],WW1[3])),]
-        if (W12 > WW2[7]){
+        tnode12 <- rl12 + (1-rl12)*2
+        tnode21 <- rl21 + (1-rl21)*2
+        if (W12 > WW2[7] & min(table(tnode12)) >= min_node_size){
           WW2[7] <- W12
           # we are going to indicate rule just one split treat if lower or equal by 9912
           WW2[8] <- 9912
@@ -787,11 +798,11 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (treated 1) or right node (not treated 2)
-          tnodemax <- rl12 + (1-rl12)*2
+          tnodemax <- tnode12
           # save rule
           rulemax <- rl12
         }
-        if (W21 > WW2[7]){
+        if (W21 > WW2[7] & min(table(tnode21)) >= min_node_size){
           WW2[7] <- W21
           # we are going to indicate rule just one split treat if strictly greater by 9921
           WW2[8] <- 9921
@@ -800,7 +811,7 @@ Rlrpltree <- function(scores11 = NULL,
           # split point
           WW2[2] <- jj
           # whether in left node (not treated 1) or right node (treated 2)
-          tnodemax <- rl21 + (1-rl21)*2
+          tnodemax <- tnode21
           # save rule
           rulemax <- rl21
         }
@@ -856,7 +867,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                             s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                             s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
 
-                    if (W1234 > WW2[7]){
+                    if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                       # ii is splitting variable at node 0 and jj the split point
                       # kk is splitting variable at first sub-tree and ll the split point
                       # pp is splitting variable at second sub-tree and tt the split point
@@ -918,7 +929,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
 
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -975,7 +986,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point
@@ -1028,7 +1039,7 @@ Rlrpltree <- function(scores11 = NULL,
                                                               s10_1* r1234[s10_2]*(1- r1234[s10_3]) +
                                                               s01_1*(1- r1234[s01_2])* r1234[s01_3] +
                                                               s00_1*(1- r1234[s00_2])*(1- r1234[s00_3]))
-                      if (W1234 > WW2[7]){
+                      if (W1234 > WW2[7] & min(table(tnode)) >= min_node_size){
                         # ii is splitting variable at node 0 and jj the split point
                         # kk is splitting variable at first sub-tree and ll the split point
                         # pp is splitting variable at second sub-tree and tt the split point

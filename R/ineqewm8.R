@@ -41,6 +41,7 @@ ineqewm8 <-function(scores11 = NULL,
                     rule = c("tree","linear_rule"),
                     depth = 2,
                     quants = NULL,
+                    min_node_size = 1,
                     verbose = 1,
                     targetXnames_pretty = NULL,
                     roundvalues = FALSE,
@@ -96,6 +97,7 @@ ineqewm8 <-function(scores11 = NULL,
                      depth = depth,
                      s = s,
                      ns = ns,
+                     min_node_size = min_node_size,
                      verbose = verbose)
     # Optimal not to treat anyone
     if (res[1,8] == 0){

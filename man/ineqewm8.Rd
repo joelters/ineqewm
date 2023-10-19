@@ -17,6 +17,7 @@ ineqewm8(
   rule = c("tree", "linear_rule"),
   depth = 2,
   quants = NULL,
+  min_node_size = 1,
   verbose = 1,
   targetXnames_pretty = NULL,
   roundvalues = FALSE,
