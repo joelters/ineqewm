@@ -1,3 +1,4 @@
+#' @export
 dyadcv <- function(X,Y,f,
                    ML = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso"),
                    Kcv = 5){
