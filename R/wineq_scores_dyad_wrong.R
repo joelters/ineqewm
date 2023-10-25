@@ -14,15 +14,15 @@
 #'
 #' @return A matrix with scores and id of the pair
 #' @export
-wineq_scores_dyad <- function(Y,D,X,pscore,
-                              design = c("rct","observational"),
-                              est_method = c("PI","LR"),
-                              MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
-                              MLineq = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
-                              CF = TRUE,
-                              K = 5,
-                              leaveoneout = FALSE,
-                              verbose = 1){
+wineq_scores_dyad_wrong <- function(Y,D,X,pscore,
+                         design = c("rct","observational"),
+                         est_method = c("PI","LR"),
+                         MLps = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                         MLineq = c("Lasso", "Ridge", "RF", "CIF", "XGB", "CB","Logit_lasso", "SL"),
+                         CF = TRUE,
+                         K = 5,
+                         leaveoneout = FALSE,
+                         verbose = 1){
   D <- as.numeric(D)
   Y <- as.numeric(Y)
   n <- length(Y)
@@ -112,8 +112,7 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
             ########## Train ps model with obs not in Ci or Cj ############
             mps <- ML::modest(Xnotij,as.numeric(Dnotij),ML = MLps)
             g <- function(a,b) 0.5*(a + b - abs(a - b))
-            mreg <- dyadmodest(Dnotij,
-                               Xnotij,
+            mreg <- dyadmodest(Xnotij,
                                as.numeric(Ynotij),
                                f = g,
                                ML = MLineq)
@@ -135,27 +134,13 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                   and values greater or equal than 1 have been set to 0.999")
               }
               regii <- dyadFVest(mreg,
-                                 Di = Dnotij,
                                  Xi = Xnotij,
                                  Yi = Ynotij,
-                                 Dnewi = Dii,
                                  Xnewi = Xii,
                                  Ynewi = Yii,
                                  f = g,
                                  ML = MLineq,
                                  shape = "triangle")
-              regiiab <- dyadFVestab(mreg ,
-                                     Xi = Xnotij,
-                                     Yi = Ynotij,
-                                     Xnewi = Xii,
-                                     Ynewi = Yii,
-                                     f = g,
-                                     ML = MLineq,
-                                     shape = "triangle")
-              regii11 <- regiiab$fv11
-              regii10 <- regiiab$fv10
-              regii01 <- regiiab$fv01
-              regii00 <- regiiab$fv00
               cnt3 <- 0
               nn1 <- length(Yii) - 1
               for (kk in 1:nn1){
@@ -169,13 +154,13 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                   a00 <- (((1-Dii[kk])*(1-Dii[mm]))/((1-psii[kk])*(1-psii[mm])))
 
 
-                  scores11[cnt,] <- c(regii11[cnt3] + a11*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
+                  scores11[cnt,] <- c(regii[cnt3] + a11*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores10[cnt,] <- c(regii10[cnt3] + a10*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
+                  scores10[cnt,] <- c(regii[cnt3] + a10*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores01[cnt,] <- c(regii01[cnt3] + a01*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
+                  scores01[cnt,] <- c(regii[cnt3] + a01*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
-                  scores00[cnt,] <- c(regii00[cnt3] + a00*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
+                  scores00[cnt,] <- c(regii[cnt3] + a00*(g(Yii[kk],Yii[mm]) - regii[cnt3]),
                                       idii[kk],idii[mm])
                 }
               }
@@ -187,10 +172,8 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
               Xij <- X[c(ind[[ii]],ind[[jj]]),]
               YCi <- Y[ind[[ii]]]
               XCi <- X[ind[[ii]],]
-              DCi <- D[ind[[ii]]]
               YCj <- Y[ind[[jj]]]
               XCj <- X[ind[[jj]],]
-              DCj <- D[ind[[jj]]]
               Dij <- D[c(ind[[ii]],ind[[jj]])]
               idij <- id[c(ind[[ii]],ind[[jj]])]
               psij <- ML::FVest(mps,Xnotij,Dnotij,Xij,Dij,ML = MLps)
@@ -202,37 +185,17 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                   and values greater or equal than 1 have been set to 0.999")
               }
               regij <- dyadFVest(mreg,
-                                 Di = Dnotij,
                                  Xi = Xnotij,
                                  Yi = Ynotij,
-                                 Dnewi = DCi,
                                  Xnewi = XCi,
                                  Ynewi = YCi,
-                                 Dj = Dnotij,
                                  Xj = Xnotij,
                                  Yj = Ynotij,
-                                 Dnewj = DCj,
                                  Xnewj = XCj,
                                  Ynewj = YCj,
                                  f = g,
                                  ML = MLineq,
                                  shape = "square")
-              regijab <- dyadFVestab(mreg,
-                                     Xi = Xnotij,
-                                     Yi = Ynotij,
-                                     Xnewi = XCi,
-                                     Ynewi = YCi,
-                                     Xj = Xnotij,
-                                     Yj = Ynotij,
-                                     Xnewj = XCj,
-                                     Ynewj = YCj,
-                                     f = g,
-                                     ML = MLineq,
-                                     shape = "square")
-              regij11 <- regijab$fv11
-              regij10 <- regijab$fv10
-              regij01 <- regijab$fv01
-              regij00 <- regijab$fv00
               cnt3 <- 0
               for (kk in 1:length(ind[[ii]])){
                 mm1 <- length(ind[[ii]]) + 1
@@ -244,13 +207,13 @@ wineq_scores_dyad <- function(Y,D,X,pscore,
                   a01 <- (((1-Dij[kk])*Dij[mm])/((1-psij[kk])*psij[mm]))
                   a00 <- (((1-Dij[kk])*(1-Dij[mm]))/((1-psij[kk])*(1-psij[mm])))
 
-                  scores11[cnt,] <- c(regij11[cnt3] + a11*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
+                  scores11[cnt,] <- c(regij[cnt3] + a11*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores10[cnt,] <- c(regij10[cnt3] + a10*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
+                  scores10[cnt,] <- c(regij[cnt3] + a10*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores01[cnt,] <- c(regij01[cnt3] + a01*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
+                  scores01[cnt,] <- c(regij[cnt3] + a01*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
-                  scores00[cnt,] <- c(regij00[cnt3] + a00*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
+                  scores00[cnt,] <- c(regij[cnt3] + a00*(g(Yij[kk],Yij[mm]) - regij[cnt3]),
                                       idij[kk],idij[mm])
                 }
               }
