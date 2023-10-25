@@ -44,10 +44,10 @@ dyadFVestab <- function(model,
     nj <- length(Ynewj)
     XX <- matrix(0,ni*nj,ncol(Xnewi)*2 + 2)
     YY <- rep(0,ni*nj)
-    XXnew11 <- matrix(0,n*(n-1)*0.5,ncol(Xnewi)*2 + 2)
-    XXnew10 <- matrix(0,n*(n-1)*0.5,ncol(Xnewi)*2 + 2)
-    XXnew01 <- matrix(0,n*(n-1)*0.5,ncol(Xnewi)*2 + 2)
-    XXnew00 <- matrix(0,n*(n-1)*0.5,ncol(Xnewi)*2 + 2)
+    XXnew11 <- matrix(0,ni*nj,ncol(Xnewi)*2 + 2)
+    XXnew10 <- matrix(0,ni*nj,ncol(Xnewi)*2 + 2)
+    XXnew01 <- matrix(0,ni*nj,ncol(Xnewi)*2 + 2)
+    XXnew00 <- matrix(0,ni*nj,ncol(Xnewi)*2 + 2)
     YYnew <- rep(0,ni*nj)
     cnt <- 0
     for (i in 1:ni){
